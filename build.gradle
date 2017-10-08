@@ -25,8 +25,24 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'MainKt'
+        attributes "Main-Class": "MainKt"
     }
 
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    from sourceSets.main.runtimeClasspath
+}
+
+task deploy(dependsOn: "jar") {
+
+    // Appears to force copying to await .jar creation.
+    doLast {
+        copy {
+            from "build/libs"
+            into "build/processes/a"
+        }
+
+        copy {
+            from "build/libs"
+            into "build/processes/b"
+        }
+    }
 }
