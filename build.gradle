@@ -28,7 +28,9 @@ jar {
         attributes "Main-Class": "MainKt"
     }
 
-    from sourceSets.main.runtimeClasspath
+    archiveName "process.jar"
+
+    from configurations.runtime.collect { it.isDirectory() ? it : zipTree(it) }
 }
 
 task deploy(dependsOn: "jar") {
