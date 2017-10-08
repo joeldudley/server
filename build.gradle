@@ -46,5 +46,10 @@ task deploy(dependsOn: "jar") {
             from "build/libs"
             into "build/processes/b"
         }
+
+        copy {
+            from "src/main/resources/run.sh"
+            into "build/processes"
+        }
     }
 }
