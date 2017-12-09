@@ -1,7 +1,8 @@
 package server
 
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.junit.Before
-import org.junit.BeforeClass
 import org.junit.Test
 import java.net.ConnectException
 import java.net.URL
@@ -13,41 +14,39 @@ private val PORT = 4444
 class ServerTests {
     @Before
     fun setUp() {
+        val server = Server(PORT)
         thread(start = true) {
-            val server = Server(PORT)
             server.start()
         }
     }
 
     @Test
     fun `server accepts connections on chosen port`() {
-        val url = URL("http://localhost:$PORT")
-        val connection = url.openConnection()
-        connection.connect()
+        val client = OkHttpClient()
+        val url = URL("http://localhost:$PORT\r\n")
+        val request = Request.Builder().url(url).build()
+        client.newCall(request).execute()
     }
 
     @Test
     fun `server rejects connections on other ports`() {
-        val url = URL("http://localhost:${PORT + 1}")
-        val connection = url.openConnection()
+        val client = OkHttpClient()
+        val url = URL("http://localhost:${PORT + 1}\r\n")
+        val request = Request.Builder().url(url).build()
 
         assertFailsWith<ConnectException> {
-            connection.connect()
+            client.newCall(request).execute()
         }
     }
 
     @Test
     fun `the server reuses threads`() {
-        val url = URL("http://localhost:$PORT")
+        val client = OkHttpClient()
+        val url = URL("http://localhost:$PORT\r\n")
+        val request = Request.Builder().url(url).build()
 
         for (i in 0..100) {
-            val connection = url.openConnection()
-            val connectionReader = connection.getInputStream().bufferedReader()
-
-            while (true) {
-                val line = connectionReader.readLine() ?: break
-                println(line)
-            }
+            client.newCall(request).execute()
         }
     }
 }
