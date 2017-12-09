@@ -23,30 +23,10 @@ dependencies {
     testCompile "org.jetbrains.kotlin:kotlin-test-junit"
 }
 
-// Creates node A.
-task nodeAJar(type: Jar) {
+jar {
     manifest {
-        attributes "Main-Class": "node.NodeAKt"
+        attributes "Main-Class": "server.MainKt"
     }
 
-    archiveName "nodeA.jar"
-
     from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    with jar
 }
-
-// Creates node B.
-task nodeBJar(type: Jar) {
-    manifest {
-        attributes "Main-Class": "node.NodeBKt"
-    }
-
-    archiveName "nodeB.jar"
-
-    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-
-    with jar
-}
-
-// Deploys nodes A and B.
-task deploy(dependsOn: [nodeAJar, nodeBJar])
