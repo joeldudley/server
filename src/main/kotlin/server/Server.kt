@@ -1,6 +1,7 @@
 package server
 
 import java.io.BufferedReader
+import java.io.BufferedWriter
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.concurrent.Executors
@@ -32,19 +33,20 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
             val requestLine = extractRequestLine(connectionReader)
             val requestHeaders = extractHeaders(connectionReader)
 
-            val responseHeaders = listOf("HTTP/1.1 200 OK", "Content-Type: text/plain", "Content-Length: 100", "Connection: close")
-            for (header in responseHeaders) {
-                connectionWriter.write(header)
-                connectionWriter.newLine()
-                connectionWriter.flush()
+            writeResponseHeaders(connectionWriter)
+
+            when (requestLine.method) {
+                "GET" -> {
+                    connectionWriter.write("GET received")
+                    connectionWriter.newLine()
+                    connectionWriter.flush()
+                }
+                "POST" -> {
+                    connectionWriter.write("POST received")
+                    connectionWriter.newLine()
+                    connectionWriter.flush()
+                }
             }
-
-            connectionWriter.newLine()
-            connectionWriter.flush()
-
-            connectionWriter.write("hello")
-            connectionWriter.newLine()
-            connectionWriter.flush()
 
             connection.close()
         }
@@ -93,5 +95,18 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
         }
 
         return headers
+    }
+
+    // TODO: Add tests.
+    // TODO: Fix length.
+    internal fun writeResponseHeaders(connectionWriter: BufferedWriter) {
+        val responseHeaders = listOf("HTTP/1.1 200 OK", "Content-Type: text/plain", "Content-Length: 100", "Connection: close")
+        for (header in responseHeaders) {
+            connectionWriter.write(header)
+            connectionWriter.newLine()
+            connectionWriter.flush()
+        }
+        connectionWriter.newLine()
+        connectionWriter.flush()
     }
 }
