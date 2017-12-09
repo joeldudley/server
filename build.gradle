@@ -21,6 +21,8 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-reflect"
     testCompile "org.jetbrains.kotlin:kotlin-test"
     testCompile "org.jetbrains.kotlin:kotlin-test-junit"
+
+    testCompile "com.squareup.okhttp3:okhttp:3.9.1"
 }
 
 jar {
