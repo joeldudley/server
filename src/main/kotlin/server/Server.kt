@@ -24,9 +24,7 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
     private fun handleConnection(connection: Socket) {
         threadPool.submit {
 
-            val connectionInputStream = connection.getInputStream()
-            val connectionReader = connectionInputStream.bufferedReader()
-            val request = parseRequest(connectionReader)
+            val request = parseRequest(connection)
 
             val connectionOutputStream = connection.getOutputStream()
             val connectionWriter = connectionOutputStream.bufferedWriter()
@@ -52,7 +50,17 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
 
     internal data class Request(val method: String, val path: String, val protocol: String, val headers: Map<String, String>)
 
-    internal fun parseRequest(connectionReader: BufferedReader): Request {
+    private fun parseRequest(connection: Socket): Request {
+        val connectionReader = createConnectionReader(connection)
+        return parseRequestFromConnectionReader(connectionReader)
+    }
+
+    private fun createConnectionReader(connection: Socket): BufferedReader {
+        val connectionInputStream = connection.getInputStream()
+        return connectionInputStream.bufferedReader()
+    }
+
+    internal fun parseRequestFromConnectionReader(connectionReader: BufferedReader): Request {
         val (method, path, protocol) = extractRequestLine(connectionReader)
         val headers = extractHeaders(connectionReader)
         return Request(method, path, protocol, headers)

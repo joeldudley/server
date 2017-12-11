@@ -15,7 +15,7 @@ class ParseRequestTests {
         val validRequestLine = "$method $path $protocol\r\n\r\n"
         val bufferedReader = validRequestLine.byteInputStream().bufferedReader()
 
-        val request = server.parseRequest(bufferedReader)
+        val request = server.parseRequestFromConnectionReader(bufferedReader)
         assertEquals(request.method, method)
         assertEquals(request.path, path)
         assertEquals(request.protocol, protocol)
@@ -28,7 +28,7 @@ class ParseRequestTests {
         val bufferedReader = invalidRequestLine.byteInputStream().bufferedReader()
 
         assertFailsWith<IllegalArgumentException> {
-            server.parseRequest(bufferedReader)
+            server.parseRequestFromConnectionReader(bufferedReader)
         }
     }
 
@@ -38,7 +38,7 @@ class ParseRequestTests {
         val validRequestLine = "GET / HTTP/1.1\r\n${host.first}: ${host.second}\r\n${connection.first}: ${connection.second}\r\n\r\n"
         val bufferedReader = validRequestLine.byteInputStream().bufferedReader()
 
-        val request = server.parseRequest(bufferedReader)
+        val request = server.parseRequestFromConnectionReader(bufferedReader)
         val headers = request.headers
         assertEquals(headers[host.first], host.second)
         assertEquals(headers[connection.first], connection.second)
@@ -55,7 +55,7 @@ class ParseRequestTests {
             val bufferedReader = invalidHeaders.byteInputStream().bufferedReader()
 
             assertFailsWith<IllegalArgumentException> {
-                server.parseRequest(bufferedReader)
+                server.parseRequestFromConnectionReader(bufferedReader)
             }
         }
     }
