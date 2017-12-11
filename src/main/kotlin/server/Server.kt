@@ -26,16 +26,14 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
 
             val connectionInputStream = connection.getInputStream()
             val connectionReader = connectionInputStream.bufferedReader()
+            val request = parseRequest(connectionReader)
 
             val connectionOutputStream = connection.getOutputStream()
             val connectionWriter = connectionOutputStream.bufferedWriter()
 
-            val requestLine = extractRequestLine(connectionReader)
-            val requestHeaders = extractHeaders(connectionReader)
-
             writeResponseHeaders(connectionWriter)
 
-            when (requestLine.method) {
+            when (request.method) {
                 "GET" -> {
                     connectionWriter.write("GET received")
                     connectionWriter.newLine()
@@ -52,19 +50,27 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
         }
     }
 
-    internal data class RequestLine(val method: String, val path: String, val protocol: String)
+    internal data class Request(val method: String, val path: String, val protocol: String, val headers: Map<String, String>)
 
-    internal fun extractRequestLine(connectionReader: BufferedReader): RequestLine {
+    internal fun parseRequest(connectionReader: BufferedReader): Request {
+        val (method, path, protocol) = extractRequestLine(connectionReader)
+        val headers = extractHeaders(connectionReader)
+        return Request(method, path, protocol, headers)
+    }
+
+    private fun extractRequestLine(connectionReader: BufferedReader): Triple<String, String, String> {
         val requestLine = connectionReader.readLine()
-        val requestLineItems = requestLine.split(' ')
-        if (requestLineItems.size != 3) {
+        val requestLineRegex = Regex("""[^ ]+""")
+        val requestLineMatchResults = requestLineRegex.findAll(requestLine)
+        val requestLineItems = requestLineMatchResults.map { it.value }.toList()
+        if (requestLineItems. size != 3) {
             throw IllegalArgumentException("Poorly formed HTTP request - request line doesn't contain exactly three items.")
         }
         val (method, path, protocol) = requestLineItems
-        return RequestLine(method, path, protocol)
+        return Triple(method, path, protocol)
     }
 
-    internal fun extractHeaders(connectionReader: BufferedReader): Map<String, String> {
+    private fun extractHeaders(connectionReader: BufferedReader): Map<String, String> {
         val headers = mutableMapOf<String, String>()
 
         while (true) {
@@ -75,23 +81,12 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
                 break
             }
 
-            val headerAndValue = line.split(':')
-
-            when (headerAndValue.size) {
-                2 -> {
-                    val (header, value) = headerAndValue
-                    headers.put(header.trim(), value.trim())
-                }
-                3 -> {
-                    if (headerAndValue.first() != "Host") {
-                        throw IllegalArgumentException("Poorly formed HTTP request - header doesn't contain exactly two items.")
-                    } else {
-                        val (header, host, port) = headerAndValue
-                        headers.put(header.trim(), (host + port).trim())
-                    }
-                }
-                else -> throw IllegalArgumentException("Poorly formed HTTP request - header doesn't contain exactly two items.")
+            if (!line.contains(':')) {
+                throw IllegalArgumentException("Poorly formed HTTP request - no separating colon.")
             }
+
+            val (header, value) = line.split(':', limit = 2).map { it.trim() }
+            headers.put(header.trim(), value.trim())
         }
 
         return headers

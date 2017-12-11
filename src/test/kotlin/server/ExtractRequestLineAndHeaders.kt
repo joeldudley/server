@@ -12,23 +12,23 @@ class ExtractRequestLineAndHeadersTests {
     @Test
     fun `request line is parsed correctly`() {
         val (method, path, protocol) = listOf("GET", "/", "HTTP/1.1")
-        val validRequestLine = "$method $path $protocol\r\n"
+        val validRequestLine = "$method $path $protocol\r\n\r\n"
         val bufferedReader = validRequestLine.byteInputStream().bufferedReader()
 
-        val requestLine = server.extractRequestLine(bufferedReader)
-        assertEquals(requestLine.method, method)
-        assertEquals(requestLine.path, path)
-        assertEquals(requestLine.protocol, protocol)
+        val request = server.parseRequest(bufferedReader)
+        assertEquals(request.method, method)
+        assertEquals(request.path, path)
+        assertEquals(request.protocol, protocol)
     }
 
     @Test
-    fun `request line must be formatted correctly`() {
+    fun `request line must contain three elements separated by spaces`() {
         // Does not contain three elements separated by spaces (method, request URI, protocol version).
-        val invalidRequestLine = "HTTP /\r\n"
+        val invalidRequestLine = "HTTP /\r\n\r\n"
         val bufferedReader = invalidRequestLine.byteInputStream().bufferedReader()
 
         assertFailsWith<IllegalArgumentException> {
-            server.extractRequestLine(bufferedReader)
+            server.parseRequest(bufferedReader)
         }
     }
 
@@ -38,27 +38,24 @@ class ExtractRequestLineAndHeadersTests {
         val validRequestLine = "GET / HTTP/1.1\r\n${host.first}: ${host.second}\r\n${connection.first}: ${connection.second}\r\n\r\n"
         val bufferedReader = validRequestLine.byteInputStream().bufferedReader()
 
-        server.extractRequestLine(bufferedReader)
-        val headerMap = server.extractHeaders(bufferedReader)
-        assertEquals(headerMap[host.first], host.second)
-        assertEquals(headerMap[connection.first], connection.second)
+        val request = server.parseRequest(bufferedReader)
+        val headers = request.headers
+        assertEquals(headers[host.first], host.second)
+        assertEquals(headers[connection.first], connection.second)
     }
 
     @Test
     fun `headers must be formatted correctly`() {
         // Does not contain any semi-colons on at least one line.
         val invalidHeaders1 = "GET / HTTP/1.1\r\nHost localhost\r\n\r\n"
-        // Contains two or more semi-colons on at least one line.
-        val invalidHeaders2 = "GET / HTTP/1.1\r\nHost: localhost: localhost\r\n\r\n"
         // Is not followed by a blank line.
-        val invalidHeaders3 = "GET / HTTP/1.1\r\nHost: localhost: localhost\r\n"
+        val invalidHeaders2 = "GET / HTTP/1.1\r\nHost: localhost: localhost\r\n"
 
-        for (invalidHeaders in listOf(invalidHeaders1, invalidHeaders2, invalidHeaders3)) {
+        for (invalidHeaders in listOf(invalidHeaders1, invalidHeaders2)) {
             val bufferedReader = invalidHeaders.byteInputStream().bufferedReader()
 
             assertFailsWith<IllegalArgumentException> {
-                server.extractRequestLine(bufferedReader)
-                server.extractHeaders(bufferedReader)
+                server.parseRequest(bufferedReader)
             }
         }
     }
