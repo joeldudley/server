@@ -11,7 +11,7 @@ import kotlin.test.assertFailsWith
 
 private val PORT = 4444
 
-class ServerTests {
+class ServerConnectionTests {
     @Before
     fun setUp() {
         val server = Server(PORT)

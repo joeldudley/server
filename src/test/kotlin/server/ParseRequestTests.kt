@@ -6,7 +6,7 @@ import kotlin.test.assertFailsWith
 
 private val PORT = 4444
 
-class ExtractRequestLineAndHeadersTests {
+class ParseRequestTests {
     private val server = Server(PORT)
 
     @Test
