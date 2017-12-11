@@ -50,7 +50,7 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
 
     internal data class Request(val method: String, val path: String, val protocol: String, val headers: Map<String, String>)
 
-    private fun parseRequest(connection: Socket): Request {
+    internal fun parseRequest(connection: Socket): Request {
         val connectionReader = createConnectionReader(connection)
         return parseRequestFromConnectionReader(connectionReader)
     }
@@ -60,7 +60,7 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
         return connectionInputStream.bufferedReader()
     }
 
-    internal fun parseRequestFromConnectionReader(connectionReader: BufferedReader): Request {
+    private fun parseRequestFromConnectionReader(connectionReader: BufferedReader): Request {
         val (method, path, protocol) = extractRequestLine(connectionReader)
         val headers = extractHeaders(connectionReader)
         return Request(method, path, protocol, headers)
