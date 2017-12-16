@@ -24,9 +24,6 @@ dependencies {
 
     testCompile "com.squareup.okhttp3:okhttp:3.9.1"
     testCompile "org.mockito:mockito-all:2.0.2-beta"
-
-
-
 }
 
 jar {

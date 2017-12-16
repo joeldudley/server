@@ -9,8 +9,6 @@ import java.net.URL
 import kotlin.concurrent.thread
 import kotlin.test.assertFailsWith
 
-private val PORT = 4444
-
 class ServerConnectionTests {
     @Before
     fun setUp() {

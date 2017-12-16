@@ -1,5 +1,7 @@
 package server
 
+internal val PORT = 4444
+
 fun main(args: Array<String>) {
-    Server(4444).start()
+    Server(PORT).start()
 }

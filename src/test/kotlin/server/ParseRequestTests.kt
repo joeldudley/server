@@ -8,8 +8,6 @@ import java.net.Socket
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-private val PORT = 4444
-
 class ParseRequestTests {
     private val server = Server(PORT)
 
@@ -29,7 +27,7 @@ class ParseRequestTests {
     }
 
     @Test
-    fun `request line must contain three elements separated by spaces`() {
+    fun `request line contains three elements separated by spaces`() {
         // Does not contain three elements separated by spaces (method, request URI, protocol version).
         val invalidRequestLine = "HTTP /\r\n\r\n"
 
@@ -58,7 +56,7 @@ class ParseRequestTests {
     }
 
     @Test
-    fun `headers must be formatted correctly`() {
+    fun `headers are formatted correctly`() {
         // Does not contain any semi-colons on at least one line.
         val invalidRequest1 = "GET / HTTP/1.1\r\nHost localhost\r\n\r\n"
         // Is not followed by a blank line.
