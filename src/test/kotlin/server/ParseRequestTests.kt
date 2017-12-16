@@ -123,7 +123,7 @@ class ParseRequestTests {
 
     @Test
     fun `POST request body is parsed correctly`() {
-        val validRequest = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\nsay=Hi&to=Mom"
+        val validRequest = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\none=two&three=four"
 
         val mockSocket = mock(Socket::class.java)
         val mockInputStream = ByteArrayInputStream(validRequest.toByteArray())
@@ -131,8 +131,10 @@ class ParseRequestTests {
 
         val request = server.parseRequest(mockSocket)
         assert(request is PostRequest)
-        assertEquals((request as PostRequest).body, mapOf("say" to "Hi", "to" to "Mom"))
+        assertEquals((request as PostRequest).body, mapOf("one" to "two", "three" to "four"))
     }
+
+    // TODO: Method for malformed body
 
     @Test
     fun `no error is thrown if POST request does not have a body`() {

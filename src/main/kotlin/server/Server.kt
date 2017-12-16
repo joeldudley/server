@@ -37,10 +37,11 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
     internal abstract class Request(val method: String, val path: String, val protocol: String, val headers: Map<String, String>)
     internal class GetRequest(
             method: String, path: String, protocol: String, headers: Map<String, String>
-    ): Request(method, path, protocol, headers)
+    ) : Request(method, path, protocol, headers)
+
     internal class PostRequest(
             val body: Map<String, String>, method: String, path: String, protocol: String, headers: Map<String, String>
-    ): Request(method, path, protocol, headers)
+    ) : Request(method, path, protocol, headers)
 
     internal fun parseRequest(connection: Socket): Request {
         val connectionReader = createConnectionReader(connection)
@@ -56,6 +57,7 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
         val (method, path, protocol) = extractRequestLine(connectionReader)
         val headers = extractHeaders(connectionReader)
         val body = extractBody(connectionReader)
+        println(body)
         return when (method) {
             "GET" -> GetRequest(method, path, protocol, headers)
             "POST" -> PostRequest(body, method, path, protocol, headers)
@@ -68,7 +70,7 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
         val requestLineRegex = Regex("""[^ ]+""")
         val requestLineMatchResults = requestLineRegex.findAll(requestLine)
         val requestLineItems = requestLineMatchResults.map { it.value }.toList()
-        if (requestLineItems. size != 3) {
+        if (requestLineItems.size != 3) {
             throw IllegalArgumentException("Poorly formed HTTP request - request line doesn't contain exactly three items.")
         }
         val (method, path, protocol) = requestLineItems
@@ -91,14 +93,25 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
             }
 
             val (header, value) = line.split(':', limit = 2).map { it.trim() }
-            headers.put(header.trim(), value.trim())
+            headers.put(header, value)
         }
 
         return headers
     }
 
     private fun extractBody(connectionReader: BufferedReader): Map<String, String> {
-        return mapOf()
+        val body = mutableMapOf<String, String>()
+
+        val line = connectionReader.readLine()
+
+        val namesAndValues = line.split('&').map { it.trim() }
+        for (nameAndValue in namesAndValues) {
+            val (name, value) = nameAndValue.split('=', limit = 2).map { it.trim() }
+            name
+            body.put(name, value)
+        }
+
+        return body
     }
 
     internal fun writeResponse(connection: Socket, body: String) {
