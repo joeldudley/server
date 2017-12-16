@@ -1,7 +1,6 @@
 package server
 
 import java.io.BufferedReader
-import java.io.BufferedWriter
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.concurrent.Executors
@@ -35,7 +34,13 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
         }
     }
 
-    internal data class Request(val method: String, val path: String, val protocol: String, val headers: Map<String, String>)
+    internal abstract class Request(val method: String, val path: String, val protocol: String, val headers: Map<String, String>)
+    internal class GetRequest(
+            method: String, path: String, protocol: String, headers: Map<String, String>
+    ): Request(method, path, protocol, headers)
+    internal class PostRequest(
+            val body: Map<String, String>, method: String, path: String, protocol: String, headers: Map<String, String>
+    ): Request(method, path, protocol, headers)
 
     internal fun parseRequest(connection: Socket): Request {
         val connectionReader = createConnectionReader(connection)
@@ -50,7 +55,12 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
     private fun parseRequestFromConnectionReader(connectionReader: BufferedReader): Request {
         val (method, path, protocol) = extractRequestLine(connectionReader)
         val headers = extractHeaders(connectionReader)
-        return Request(method, path, protocol, headers)
+        val body = extractBody(connectionReader)
+        return when (method) {
+            "GET" -> GetRequest(method, path, protocol, headers)
+            "POST" -> PostRequest(body, method, path, protocol, headers)
+            else -> throw IllegalArgumentException("Unrecognised method argument.")
+        }
     }
 
     private fun extractRequestLine(connectionReader: BufferedReader): Triple<String, String, String> {
@@ -85,6 +95,10 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
         }
 
         return headers
+    }
+
+    private fun extractBody(connectionReader: BufferedReader): Map<String, String> {
+        return mapOf()
     }
 
     internal fun writeResponse(connection: Socket, body: String) {

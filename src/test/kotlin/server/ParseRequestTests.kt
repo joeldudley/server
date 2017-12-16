@@ -7,6 +7,8 @@ import java.io.ByteArrayInputStream
 import java.net.Socket
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import server.Server.GetRequest
+import server.Server.PostRequest
 
 class ParseRequestTests {
     private val server = Server(PORT)
@@ -27,7 +29,7 @@ class ParseRequestTests {
     }
 
     @Test
-    fun `request line contains three elements separated by spaces`() {
+    fun `error is thrown if request line is malformed`() {
         // Does not contain three elements separated by spaces (method, request URI, protocol version).
         val invalidRequestLine = "HTTP /\r\n\r\n"
 
@@ -38,6 +40,32 @@ class ParseRequestTests {
         assertFailsWith<IllegalArgumentException> {
             server.parseRequest(mockSocket)
         }
+    }
+
+    @Test
+    fun `error is thrown if method is not GET or POST`() {
+        TODO()
+    }
+
+    @Test
+    fun `method is extracted correctly`() {
+        val validGetRequest = "GET / HTTP/1.1\r\n\r\n"
+
+        val mockGetSocket = mock(Socket::class.java)
+        val mockGetInputStream = ByteArrayInputStream(validGetRequest.toByteArray())
+        `when`(mockGetSocket.getInputStream()).thenReturn(mockGetInputStream)
+
+        val getRequest = server.parseRequest(mockGetSocket)
+        assert(getRequest is GetRequest)
+
+        val validPostRequest = "POST / HTTP/1.1\r\n\r\n"
+
+        val mockPostSocket = mock(Socket::class.java)
+        val mockPostInputStream = ByteArrayInputStream(validPostRequest.toByteArray())
+        `when`(mockPostSocket.getInputStream()).thenReturn(mockPostInputStream)
+
+        val postRequest = server.parseRequest(mockPostSocket)
+        assert(postRequest is PostRequest)
     }
 
     @Test
@@ -56,11 +84,23 @@ class ParseRequestTests {
     }
 
     @Test
-    fun `headers are formatted correctly`() {
+    fun `error is thrown if headers are malformed`() {
         // Does not contain any semi-colons on at least one line.
-        val invalidRequest1 = "GET / HTTP/1.1\r\nHost localhost\r\n\r\n"
-        // Is not followed by a blank line.
-        val invalidRequest2 = "GET / HTTP/1.1\r\nHost: localhost: localhost\r\n"
+        val invalidRequest = "GET / HTTP/1.1\r\nHost localhost\r\n\r\n"
+
+        val mockSocket = mock(Socket::class.java)
+        val mockInputStream = ByteArrayInputStream(invalidRequest.toByteArray())
+        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+
+        assertFailsWith<IllegalArgumentException> {
+            server.parseRequest(mockSocket)
+        }
+    }
+
+    @Test
+    fun `error is thrown if request line and headers are not followed by a blank line`() {
+        val invalidRequest1 = "GET / HTTP/1.1\r\n"
+        val invalidRequest2 = "GET / HTTP/1.1\r\nHost localhost\r\n"
 
         for (invalidRequest in listOf(invalidRequest1, invalidRequest2)) {
             val mockSocket = mock(Socket::class.java)
@@ -71,5 +111,31 @@ class ParseRequestTests {
                 server.parseRequest(mockSocket)
             }
         }
+    }
+
+    @Test
+    fun `POST request body is parsed correctly`() {
+        val validRequest = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\nsay=Hi&to=Mom"
+
+        val mockSocket = mock(Socket::class.java)
+        val mockInputStream = ByteArrayInputStream(validRequest.toByteArray())
+        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+
+        val request = server.parseRequest(mockSocket)
+        assert(request is PostRequest)
+        assertEquals((request as PostRequest).body, mapOf("say" to "Hi", "to" to "Mom"))
+    }
+
+    @Test
+    fun `no error is thrown if POST request does not have a body`() {
+        val validRequest = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\n"
+
+        val mockSocket = mock(Socket::class.java)
+        val mockInputStream = ByteArrayInputStream(validRequest.toByteArray())
+        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+
+        val request = server.parseRequest(mockSocket)
+        assert(request is PostRequest)
+        assertEquals((request as PostRequest).body, mapOf())
     }
 }

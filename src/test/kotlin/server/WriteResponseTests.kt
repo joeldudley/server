@@ -13,10 +13,8 @@ import kotlin.test.assertFailsWith
 class WriteResponseTests {
     private val server = Server(PORT)
 
-    // TODO: Other tests?
-
     @Test
-    fun `request line is parsed correctly`() {
+    fun `response is written correctly`() {
         val responseBody = "Test body"
         val expectedResponse = "HTTP/1.1 200 OK\n" +
                 "Content-Type: text/plain\n" +
