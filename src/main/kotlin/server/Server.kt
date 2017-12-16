@@ -57,7 +57,6 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
         val (method, path, protocol) = extractRequestLine(connectionReader)
         val headers = extractHeaders(connectionReader)
         val body = extractBody(connectionReader)
-        println(body)
         return when (method) {
             "GET" -> GetRequest(method, path, protocol, headers)
             "POST" -> PostRequest(body, method, path, protocol, headers)
@@ -71,7 +70,7 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
         val requestLineMatchResults = requestLineRegex.findAll(requestLine)
         val requestLineItems = requestLineMatchResults.map { it.value }.toList()
         if (requestLineItems.size != 3) {
-            throw IllegalArgumentException("Poorly formed HTTP request - request line doesn't contain exactly three items.")
+            throw IllegalArgumentException("Poorly formed HTTP request line - request line doesn't contain exactly three items.")
         }
         val (method, path, protocol) = requestLineItems
         return Triple(method, path, protocol)
@@ -82,15 +81,11 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
 
         while (true) {
             val line = connectionReader.readLine() ?:
-                    throw IllegalArgumentException("Poorly formed HTTP request - no blank line after headers.")
+                    throw IllegalArgumentException("Poorly formed HTTP request headers - no blank line after headers.")
 
-            if (line == "") {
-                break
-            }
+            if (line == "") break
 
-            if (!line.contains(':')) {
-                throw IllegalArgumentException("Poorly formed HTTP request - no separating colon.")
-            }
+            if (!line.contains(':')) throw IllegalArgumentException("Poorly formed HTTP request headers - no separating colon.")
 
             val (header, value) = line.split(':', limit = 2).map { it.trim() }
             headers.put(header, value)
@@ -104,11 +99,19 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
 
         val line = connectionReader.readLine()
 
-        val namesAndValues = line.split('&').map { it.trim() }
-        for (nameAndValue in namesAndValues) {
-            val (name, value) = nameAndValue.split('=', limit = 2).map { it.trim() }
-            name
-            body.put(name, value)
+        if (line !in listOf("", null)) {
+            val namesAndValues = line.split('&')
+            for (nameAndValue in namesAndValues) {
+                val numberOfSeparators = nameAndValue.count { it == '=' }
+                if (numberOfSeparators == 0) throw IllegalArgumentException("Poorly formed HTTP request body - no value.")
+                if (numberOfSeparators >= 2) throw IllegalArgumentException("Poorly formed HTTP request body - no name.")
+
+                val (name, value) = nameAndValue.split('=', limit = 2).map { it.trim() }
+
+                if (name in body) throw IllegalArgumentException("Poorly formed HTTP request body - repeated name.")
+
+                body.put (name, value)
+            }
         }
 
         return body

@@ -3,12 +3,12 @@ package server
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import server.Server.GetRequest
+import server.Server.PostRequest
 import java.io.ByteArrayInputStream
 import java.net.Socket
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import server.Server.GetRequest
-import server.Server.PostRequest
 
 class ParseRequestTests {
     private val server = Server(PORT)
@@ -123,7 +123,7 @@ class ParseRequestTests {
 
     @Test
     fun `POST request body is parsed correctly`() {
-        val validRequest = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\none=two&three=four"
+        val validRequest = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\none=two&three=four\r\n"
 
         val mockSocket = mock(Socket::class.java)
         val mockInputStream = ByteArrayInputStream(validRequest.toByteArray())
@@ -134,7 +134,34 @@ class ParseRequestTests {
         assertEquals((request as PostRequest).body, mapOf("one" to "two", "three" to "four"))
     }
 
-    // TODO: Method for malformed body
+    @Test
+    fun `error is thrown if body is malformed`() {
+        val invalidRequest1 = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\none&three=four\r\n"
+        val invalidRequest2 = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\none=twothree=four\r\n"
+
+        for (invalidRequest in listOf(invalidRequest1, invalidRequest2)) {
+            val mockSocket = mock(Socket::class.java)
+            val mockInputStream = ByteArrayInputStream(invalidRequest.toByteArray())
+            `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+
+            assertFailsWith<IllegalArgumentException> {
+                server.parseRequest(mockSocket)
+            }
+        }
+    }
+
+    @Test
+    fun `error is thrown if body has repeated names`() {
+        val invalidRequest = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\none=two&one=three\r\n"
+
+        val mockSocket = mock(Socket::class.java)
+        val mockInputStream = ByteArrayInputStream(invalidRequest.toByteArray())
+        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+
+        assertFailsWith<IllegalArgumentException> {
+            server.parseRequest(mockSocket)
+        }
+    }
 
     @Test
     fun `no error is thrown if POST request does not have a body`() {
