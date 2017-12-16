@@ -44,7 +44,15 @@ class ParseRequestTests {
 
     @Test
     fun `error is thrown if method is not GET or POST`() {
-        TODO()
+        val invalidRequest = "PUT / HTTP/1.1\r\n\r\n"
+
+        val mockSocket = mock(Socket::class.java)
+        val mockInputStream = ByteArrayInputStream(invalidRequest.toByteArray())
+        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+
+        assertFailsWith<IllegalArgumentException> {
+            server.parseRequest(mockSocket)
+        }
     }
 
     @Test
