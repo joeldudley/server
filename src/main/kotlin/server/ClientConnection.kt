@@ -76,6 +76,9 @@ class ClientConnection(private val connection: Socket) {
         return headers
     }
 
+    // TODO: This is not working - the buffered body never finishes reading
+    // TODO: Need to use content length
+
     private fun extractBody(): Map<String, String> {
         val body = mutableMapOf<String, String>()
 
