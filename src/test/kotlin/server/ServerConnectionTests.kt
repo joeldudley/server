@@ -2,6 +2,7 @@ package server
 
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.net.ConnectException
@@ -10,12 +11,20 @@ import kotlin.concurrent.thread
 import kotlin.test.assertFailsWith
 
 class ServerConnectionTests {
+    private lateinit var server: Server
+
     @Before
     fun setUp() {
-        val server = Server(PORT)
+        server = Server(PORT)
+        // The server needs to run on a separate thread, or there won't be a thread for the tests.
         thread(start = true) {
             server.start()
         }
+    }
+
+    @After
+    fun shutDown() {
+        server.shutDown()
     }
 
     @Test

@@ -11,7 +11,18 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class WriteResponseTests {
-    private val server = Server(PORT)
+
+    fun createMockSocket(): Socket {
+        val mockSocket = mock(Socket::class.java)
+
+        val mockInputStream = ByteArrayInputStream("".toByteArray())
+        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+
+        val mockOutputStream = ByteArrayOutputStream()
+        `when`(mockSocket.getOutputStream()).thenReturn(mockOutputStream)
+
+        return mockSocket
+    }
 
     @Test
     fun `response is written correctly`() {
@@ -23,12 +34,11 @@ class WriteResponseTests {
                 "\n" +
                 "$responseBody\n"
 
-        val mockSocket = mock(Socket::class.java)
-        val mockOutputStream = ByteArrayOutputStream()
-        `when`(mockSocket.getOutputStream()).thenReturn(mockOutputStream)
+        val mockSocket = createMockSocket()
 
-        server.writeResponse(mockSocket, responseBody)
+        val clientConnection = ClientConnection(mockSocket)
+        clientConnection.writeResponse(responseBody)
 
-        assertEquals(expectedResponse, mockOutputStream.toString())
+        assertEquals(expectedResponse, mockSocket.getOutputStream().toString())
     }
 }

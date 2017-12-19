@@ -3,26 +3,37 @@ package server
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
-import server.Server.GetRequest
-import server.Server.PostRequest
+import server.request.GetRequest
+import server.request.PostRequest
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.net.Socket
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class ParseRequestTests {
-    private val server = Server(PORT)
+
+    fun createMockSocket(inputStreamContents: String): Socket {
+        val mockSocket = mock(Socket::class.java)
+
+        val mockInputStream = ByteArrayInputStream(inputStreamContents.toByteArray())
+        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+
+        val mockOutputStream = ByteArrayOutputStream()
+        `when`(mockSocket.getOutputStream()).thenReturn(mockOutputStream)
+
+        return mockSocket
+    }
 
     @Test
     fun `request line is parsed correctly`() {
         val (method, path, protocol) = listOf("GET", "/", "HTTP/1.1")
         val validRequestLine = "$method $path $protocol\r\n\r\n"
 
-        val mockSocket = mock(Socket::class.java)
-        val mockInputStream = ByteArrayInputStream(validRequestLine.toByteArray())
-        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+        val mockSocket = createMockSocket(validRequestLine)
 
-        val request = server.parseRequest(mockSocket)
+        val clientConnection = ClientConnection(mockSocket)
+        val request = clientConnection.parseRequest()
         assertEquals(request.method, method)
         assertEquals(request.path, path)
         assertEquals(request.protocol, protocol)
@@ -33,12 +44,11 @@ class ParseRequestTests {
         // Does not contain three elements separated by spaces (method, request URI, protocol version).
         val invalidRequestLine = "HTTP /\r\n\r\n"
 
-        val mockSocket = mock(Socket::class.java)
-        val mockInputStream = ByteArrayInputStream(invalidRequestLine.toByteArray())
-        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+        val mockSocket = createMockSocket(invalidRequestLine)
 
+        val clientConnection = ClientConnection(mockSocket)
         assertFailsWith<IllegalArgumentException> {
-            server.parseRequest(mockSocket)
+            clientConnection.parseRequest()
         }
     }
 
@@ -46,12 +56,11 @@ class ParseRequestTests {
     fun `error is thrown if method is not GET or POST`() {
         val invalidRequest = "PUT / HTTP/1.1\r\n\r\n"
 
-        val mockSocket = mock(Socket::class.java)
-        val mockInputStream = ByteArrayInputStream(invalidRequest.toByteArray())
-        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+        val mockSocket = createMockSocket(invalidRequest)
 
+        val clientConnection = ClientConnection(mockSocket)
         assertFailsWith<IllegalArgumentException> {
-            server.parseRequest(mockSocket)
+            clientConnection.parseRequest()
         }
     }
 
@@ -59,20 +68,18 @@ class ParseRequestTests {
     fun `method is extracted correctly`() {
         val validGetRequest = "GET / HTTP/1.1\r\n\r\n"
 
-        val mockGetSocket = mock(Socket::class.java)
-        val mockGetInputStream = ByteArrayInputStream(validGetRequest.toByteArray())
-        `when`(mockGetSocket.getInputStream()).thenReturn(mockGetInputStream)
+        val mockGetSocket = createMockSocket(validGetRequest)
 
-        val getRequest = server.parseRequest(mockGetSocket)
+        val clientGetConnection = ClientConnection(mockGetSocket)
+        val getRequest = clientGetConnection.parseRequest()
         assert(getRequest is GetRequest)
 
         val validPostRequest = "POST / HTTP/1.1\r\n\r\n"
 
-        val mockPostSocket = mock(Socket::class.java)
-        val mockPostInputStream = ByteArrayInputStream(validPostRequest.toByteArray())
-        `when`(mockPostSocket.getInputStream()).thenReturn(mockPostInputStream)
+        val mockPostSocket = createMockSocket(validPostRequest)
 
-        val postRequest = server.parseRequest(mockPostSocket)
+        val clientPostConnection = ClientConnection(mockPostSocket)
+        val postRequest = clientPostConnection.parseRequest()
         assert(postRequest is PostRequest)
     }
 
@@ -81,11 +88,10 @@ class ParseRequestTests {
         val (host, connection) = listOf("Host" to "localhost", "Connection" to "Keep-Alive")
         val validRequest = "GET / HTTP/1.1\r\n${host.first}: ${host.second}\r\n${connection.first}: ${connection.second}\r\n\r\n"
 
-        val mockSocket = mock(Socket::class.java)
-        val mockInputStream = ByteArrayInputStream(validRequest.toByteArray())
-        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+        val mockSocket = createMockSocket(validRequest)
 
-        val request = server.parseRequest(mockSocket)
+        val clientConnection = ClientConnection(mockSocket)
+        val request = clientConnection.parseRequest()
         val headers = request.headers
         assertEquals(headers[host.first], host.second)
         assertEquals(headers[connection.first], connection.second)
@@ -96,12 +102,11 @@ class ParseRequestTests {
         // Does not contain any semi-colons on at least one line.
         val invalidRequest = "GET / HTTP/1.1\r\nHost localhost\r\n\r\n"
 
-        val mockSocket = mock(Socket::class.java)
-        val mockInputStream = ByteArrayInputStream(invalidRequest.toByteArray())
-        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+        val mockSocket = createMockSocket(invalidRequest)
 
+        val clientConnection = ClientConnection(mockSocket)
         assertFailsWith<IllegalArgumentException> {
-            server.parseRequest(mockSocket)
+            clientConnection.parseRequest()
         }
     }
 
@@ -111,12 +116,11 @@ class ParseRequestTests {
         val invalidRequest2 = "GET / HTTP/1.1\r\nHost localhost\r\n"
 
         for (invalidRequest in listOf(invalidRequest1, invalidRequest2)) {
-            val mockSocket = mock(Socket::class.java)
-            val mockInputStream = ByteArrayInputStream(invalidRequest.toByteArray())
-            `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+            val mockSocket = createMockSocket(invalidRequest)
 
+            val clientConnection = ClientConnection(mockSocket)
             assertFailsWith<IllegalArgumentException> {
-                server.parseRequest(mockSocket)
+                clientConnection.parseRequest()
             }
         }
     }
@@ -125,11 +129,10 @@ class ParseRequestTests {
     fun `POST request body is parsed correctly`() {
         val validRequest = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\none=two&three=four\r\n"
 
-        val mockSocket = mock(Socket::class.java)
-        val mockInputStream = ByteArrayInputStream(validRequest.toByteArray())
-        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+        val mockSocket = createMockSocket(validRequest)
 
-        val request = server.parseRequest(mockSocket)
+        val clientConnection = ClientConnection(mockSocket)
+        val request = clientConnection.parseRequest()
         assert(request is PostRequest)
         assertEquals((request as PostRequest).body, mapOf("one" to "two", "three" to "four"))
     }
@@ -140,12 +143,11 @@ class ParseRequestTests {
         val invalidRequest2 = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\none=twothree=four\r\n"
 
         for (invalidRequest in listOf(invalidRequest1, invalidRequest2)) {
-            val mockSocket = mock(Socket::class.java)
-            val mockInputStream = ByteArrayInputStream(invalidRequest.toByteArray())
-            `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+            val mockSocket = createMockSocket(invalidRequest)
 
+            val clientConnection = ClientConnection(mockSocket)
             assertFailsWith<IllegalArgumentException> {
-                server.parseRequest(mockSocket)
+                clientConnection.parseRequest()
             }
         }
     }
@@ -154,12 +156,11 @@ class ParseRequestTests {
     fun `error is thrown if body has repeated names`() {
         val invalidRequest = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\none=two&one=three\r\n"
 
-        val mockSocket = mock(Socket::class.java)
-        val mockInputStream = ByteArrayInputStream(invalidRequest.toByteArray())
-        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+        val mockSocket = createMockSocket(invalidRequest)
 
+        val clientConnection = ClientConnection(mockSocket)
         assertFailsWith<IllegalArgumentException> {
-            server.parseRequest(mockSocket)
+            clientConnection.parseRequest()
         }
     }
 
@@ -167,11 +168,10 @@ class ParseRequestTests {
     fun `no error is thrown if POST request does not have a body`() {
         val validRequest = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\n"
 
-        val mockSocket = mock(Socket::class.java)
-        val mockInputStream = ByteArrayInputStream(validRequest.toByteArray())
-        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
+        val mockSocket = createMockSocket(validRequest)
 
-        val request = server.parseRequest(mockSocket)
+        val clientConnection = ClientConnection(mockSocket)
+        val request = clientConnection.parseRequest()
         assert(request is PostRequest)
         assertEquals((request as PostRequest).body, mapOf())
     }
