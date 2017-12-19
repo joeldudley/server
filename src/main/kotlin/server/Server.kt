@@ -1,6 +1,7 @@
 package server
 
 import java.net.ServerSocket
+import java.net.SocketException
 import java.util.concurrent.Executors
 
 /** A server that echoes what's written to the [socket]. */
@@ -12,7 +13,12 @@ class Server(private val socket: Int, numberOfThreads: Int = 10) {
     /** Starts the server running in a loop. */
     fun start() {
         while (true) {
-            val connection = serverSocket.accept()
+            val connection = try {
+                serverSocket.accept()
+            } catch (e: SocketException) {
+                // The server has been shut down.
+                break
+            }
 
             threadPool.submit {
                 val clientConnection = ClientConnection(connection)

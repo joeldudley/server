@@ -26,18 +26,14 @@ class WriteResponseTests {
 
     @Test
     fun `response is written correctly`() {
+        val responseHeaders = listOf("HTTP/1.1 200 OK", "Content-Type: text/plain", "Content-Length: 10", "Connection: close")
         val responseBody = "Test body"
-        val expectedResponse = "HTTP/1.1 200 OK\n" +
-                "Content-Type: text/plain\n" +
-                "Content-Length: 10\n" +
-                "Connection: close\n" +
-                "\n" +
-                "$responseBody\n"
+        val expectedResponse = responseHeaders.joinToString("\n") + "\n\n" + "$responseBody\n"
 
         val mockSocket = createMockSocket()
 
         val clientConnection = ClientConnection(mockSocket)
-        clientConnection.writeResponse(responseBody)
+        clientConnection.writeResponse(responseHeaders, responseBody)
 
         assertEquals(expectedResponse, mockSocket.getOutputStream().toString())
     }

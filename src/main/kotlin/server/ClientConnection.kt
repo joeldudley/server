@@ -13,8 +13,19 @@ class ClientConnection(private val connection: Socket) {
         val request = parseRequest()
 
         when (request.method) {
-            "GET" -> writeResponse("GET received")
-            "POST" -> writeResponse("POST received")
+            "GET" -> {
+                val body = "GET received"
+                // We add one to account for the final new-line.
+                val bodyLength = body.length + 1
+                val headers = listOf("HTTP/1.1 200 OK", "Content-Type: text/plain", "Content-Length: $bodyLength", "Connection: close")
+                writeResponse(headers, body)
+            }
+            "POST" -> {
+                val body = "POST received"
+                val bodyLength = body.length + 1
+                val headers = listOf("HTTP/1.1 200 OK", "Content-Type: text/plain", "Content-Length: $bodyLength", "Connection: close")
+                writeResponse(headers, body)
+            }
         }
     }
 
@@ -88,11 +99,8 @@ class ClientConnection(private val connection: Socket) {
         return body
     }
 
-    internal fun writeResponse(body: String) {
-        // We add one to account for the final new-line.
-        val bodyLength = body.length + 1
-        val responseHeaders = listOf("HTTP/1.1 200 OK", "Content-Type: text/plain", "Content-Length: $bodyLength", "Connection: close")
-        for (header in responseHeaders) {
+    internal fun writeResponse(headers: List<String>, body: String) {
+        for (header in headers) {
             connectionWriter.write(header)
             connectionWriter.newLine()
         }
