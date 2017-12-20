@@ -1,30 +1,13 @@
 package server
 
 import org.junit.Test
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import server.request.Method.GET
 import server.request.Method.POST
 import server.request.PostRequest
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.net.Socket
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class ParseRequestTests {
-
-    private fun createMockSocket(inputStreamContents: String): Socket {
-        val mockSocket = mock(Socket::class.java)
-
-        val mockInputStream = ByteArrayInputStream(inputStreamContents.toByteArray())
-        `when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
-
-        val mockOutputStream = ByteArrayOutputStream()
-        `when`(mockSocket.getOutputStream()).thenReturn(mockOutputStream)
-
-        return mockSocket
-    }
 
     @Test
     fun `request line is parsed correctly`() {

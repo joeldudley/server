@@ -2,27 +2,11 @@ package server
 
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.net.Socket
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class RouterTests {
     private val router = Router()
-
-    private fun createMockSocket(inputStreamContents: String): Socket {
-        val mockSocket = Mockito.mock(Socket::class.java)
-
-        val mockInputStream = ByteArrayInputStream(inputStreamContents.toByteArray())
-        Mockito.`when`(mockSocket.getInputStream()).thenReturn(mockInputStream)
-
-        val mockOutputStream = ByteArrayOutputStream()
-        Mockito.`when`(mockSocket.getOutputStream()).thenReturn(mockOutputStream)
-
-        return mockSocket
-    }
 
     @Before
     fun setUp() {
