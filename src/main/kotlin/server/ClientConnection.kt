@@ -1,48 +1,29 @@
 package server
 
 import server.request.GetRequest
+import server.request.Method.GET
+import server.request.Method.POST
 import server.request.PostRequest
 import server.request.Request
 import java.net.Socket
 
-class ClientConnection(private val connection: Socket) {
+class ClientConnection(connection: Socket) {
     private val connectionReader = connection.getInputStream().bufferedReader()
     private val connectionWriter = connection.getOutputStream().bufferedWriter()
 
-    fun handleConnection() {
-        val request = parseRequest()
-
-        when (request.method) {
-            "GET" -> {
-                val body = "GET received"
-                // We add one to account for the final new-line.
-                val bodyLength = body.length + 1
-                val headers = listOf("HTTP/1.1 200 OK", "Content-Type: text/plain", "Content-Length: $bodyLength", "Connection: close")
-                writeResponse(headers, body)
-            }
-            "POST" -> {
-                val body = "POST received"
-                val bodyLength = body.length + 1
-                val headers = listOf("HTTP/1.1 200 OK", "Content-Type: text/plain", "Content-Length: $bodyLength", "Connection: close")
-                writeResponse(headers, body)
-            }
-        }
-    }
-
-    fun close() {
-        connection.close()
-    }
-
-    fun parseRequest(): Request {
+    internal fun parseRequest(): Request {
         val (method, path, protocol) = extractRequestLine()
         val headers = extractHeaders()
         return when (method) {
-            "GET" -> GetRequest(method, path, protocol, headers)
+            "GET" -> GetRequest(GET, path, protocol, headers)
             "POST" -> {
-                val body = extractBody()
-                PostRequest(body, method, path, protocol, headers)
+                val contentLengthString = headers["content-length"]
+                        ?: throw NoContentLengthHeaderOnPostRequestException()
+                val contentLength = contentLengthString.toInt()
+                val body = extractBody(contentLength)
+                PostRequest(body, POST, path, protocol, headers)
             }
-            else -> throw IllegalArgumentException("Unrecognised method argument.")
+            else -> throw UnrecognisedHTTPMethodException()
         }
     }
 
@@ -52,7 +33,7 @@ class ClientConnection(private val connection: Socket) {
         val requestLineMatchResults = requestLineRegex.findAll(requestLine)
         val requestLineItems = requestLineMatchResults.map { it.value }.toList()
         if (requestLineItems.size != 3) {
-            throw IllegalArgumentException("Poorly formed HTTP request line - request line doesn't contain exactly three items.")
+            throw MalformedRequestLineException()
         }
         val (method, path, protocol) = requestLineItems
         return Triple(method, path, protocol)
@@ -63,41 +44,43 @@ class ClientConnection(private val connection: Socket) {
 
         while (true) {
             val line = connectionReader.readLine() ?:
-                    throw IllegalArgumentException("Poorly formed HTTP request headers - no blank line after headers.")
+                    throw NoBlankLineAfterHeadersException()
 
             if (line == "") break
 
-            if (!line.contains(':')) throw IllegalArgumentException("Poorly formed HTTP request headers - no separating colon.")
+            if (!line.contains(':')) throw MissingColonInHeadersException()
 
-            val (header, value) = line.split(':', limit = 2).map { it.trim() }
+            val (header, value) = line.toLowerCase().split(':', limit = 2).map { it.trim() }
             headers.put(header, value)
         }
 
         return headers
     }
 
-    // TODO: This is not working - the buffered body never finishes reading
-    // TODO: Need to use content length
+    private fun extractBody(contentLength: Int): Map<String, String> {
+        val bodyChars = CharArray(contentLength)
+        connectionReader.read(bodyChars, 0, contentLength)
+        val bodyString = bodyChars.joinToString("")
 
-    private fun extractBody(): Map<String, String> {
         val body = mutableMapOf<String, String>()
 
-        val line = connectionReader.readLine()
+        // TODO: Do this more gracefully - regex below?
+        if (contentLength == 0) {
+            return body
+        }
 
-        if (line !in listOf("", null)) {
-            val namesAndValues = line.split('&')
+        val namesAndValues = bodyString.split('&')
             for (nameAndValue in namesAndValues) {
                 val numberOfSeparators = nameAndValue.count { it == '=' }
-                if (numberOfSeparators == 0) throw IllegalArgumentException("Poorly formed HTTP request body - no value.")
-                if (numberOfSeparators >= 2) throw IllegalArgumentException("Poorly formed HTTP request body - no name.")
+                if (numberOfSeparators == 0) throw MissingBodyValueException()
+                if (numberOfSeparators >= 2) throw MissingBodyNameException()
 
                 val (name, value) = nameAndValue.split('=', limit = 2).map { it.trim() }
 
-                if (name in body) throw IllegalArgumentException("Poorly formed HTTP request body - repeated name.")
+                if (name in body) throw RepeatedBodyNameException()
 
                 body.put(name, value)
             }
-        }
 
         return body
     }
@@ -113,3 +96,12 @@ class ClientConnection(private val connection: Socket) {
         connectionWriter.flush()
     }
 }
+
+class NoContentLengthHeaderOnPostRequestException: IllegalArgumentException()
+class UnrecognisedHTTPMethodException: IllegalArgumentException()
+class MalformedRequestLineException: IllegalArgumentException()
+class MissingBodyNameException: IllegalArgumentException()
+class MissingBodyValueException: IllegalArgumentException()
+class MissingColonInHeadersException: IllegalArgumentException()
+class NoBlankLineAfterHeadersException: IllegalArgumentException()
+class RepeatedBodyNameException: IllegalArgumentException()

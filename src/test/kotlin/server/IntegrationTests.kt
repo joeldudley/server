@@ -7,13 +7,17 @@ import okhttp3.RequestBody
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import server.request.Method.GET
+import server.request.Method.POST
 import java.net.ConnectException
+import java.net.SocketTimeoutException
 import java.net.URL
 import kotlin.concurrent.thread
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 // TODO: Tests of the server receiving junk and responding gracefully.
+// TODO: Tests of server reusing threads.
 
 class IntegrationTests {
     private lateinit var server: Server
@@ -21,6 +25,8 @@ class IntegrationTests {
     @Before
     fun setUp() {
         server = Server(PORT)
+        server.registerRoute("/", GET, getRootRoute)
+        server.registerRoute("/", POST, postRootRoute)
         // The server needs to run on a separate thread, or there won't be a thread for the tests.
         thread(start = true) {
             server.start()
@@ -35,7 +41,7 @@ class IntegrationTests {
     @Test
     fun `server responds to GET requests`() {
         val client = OkHttpClient()
-        val url = URL("http://localhost:$PORT\r\n")
+        val url = URL("http://localhost:$PORT\n")
         val request = Request.Builder().url(url).build()
         val response = client.newCall(request).execute()
         assert(response.isSuccessful)
@@ -45,7 +51,7 @@ class IntegrationTests {
     @Test
     fun `server responds to POST requests`() {
         val client = OkHttpClient()
-        val url = URL("http://localhost:$PORT\r\n")
+        val url = URL("http://localhost:$PORT\n")
         val mediaType = MediaType.parse("application/json")
         val body = RequestBody.create(mediaType, "one=two&three=four")
         val request = Request.Builder().url(url).post(body).build()
@@ -57,7 +63,7 @@ class IntegrationTests {
     @Test
     fun `server rejects connections on other ports`() {
         val client = OkHttpClient()
-        val url = URL("http://localhost:${PORT + 1}\r\n")
+        val url = URL("http://localhost:${PORT + 1}\n")
         val request = Request.Builder().url(url).build()
 
         assertFailsWith<ConnectException> {
@@ -66,7 +72,13 @@ class IntegrationTests {
     }
 
     @Test
-    fun `the server reuses threads`() {
-        // TODO: Need to send the server some endless piece of work somehow.
+    fun `server rejects connections on unregistered routes`() {
+        val client = OkHttpClient()
+        val url = URL("http://localhost:$PORT/test\n")
+        val request = Request.Builder().url(url).build()
+
+        assertFailsWith<SocketTimeoutException> {
+            client.newCall(request).execute()
+        }
     }
 }

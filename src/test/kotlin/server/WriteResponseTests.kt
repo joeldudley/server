@@ -3,16 +3,14 @@ package server
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
-import java.io.BufferedWriter
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.net.Socket
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 class WriteResponseTests {
 
-    fun createMockSocket(): Socket {
+    private fun createMockSocket(): Socket {
         val mockSocket = mock(Socket::class.java)
 
         val mockInputStream = ByteArrayInputStream("".toByteArray())
@@ -26,8 +24,8 @@ class WriteResponseTests {
 
     @Test
     fun `response is written correctly`() {
-        val responseHeaders = listOf("HTTP/1.1 200 OK", "Content-Type: text/plain", "Content-Length: 10", "Connection: close")
         val responseBody = "Test body"
+        val responseHeaders = listOf("HTTP/1.1 200 OK", "Content-Type: text/plain", "Content-Length: ${responseBody.length}", "Connection: close")
         val expectedResponse = responseHeaders.joinToString("\n") + "\n\n" + "$responseBody\n"
 
         val mockSocket = createMockSocket()
