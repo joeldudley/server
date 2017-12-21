@@ -45,6 +45,7 @@ abstract class Route {
      * Provides the HTTP response to an HTTP request.
      *
      * @param request the HTTP request.
+     * @return The headers and body of the HTTP response.
      */
     abstract fun dispatch(request: Request): Pair<List<String>, String>
 }
