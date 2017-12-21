@@ -26,12 +26,12 @@ class Router {
      * Routes an HTTP request to the correct [Route].
      *
      * @param request the HTTP request.
-     * @param connection the connection to the client.
+     * @return The headers and body of the HTTP response.
      */
-    fun handleConnection(request: Request, connection: ClientConnection) {
+    fun handleConnection(request: Request): Pair<List<String>, String> {
         // TODO: Introduce error handlers for unrecognised routes
         val route = routes[request.path to request.method] ?: throw UnregisteredRouteException()
-        route.dispatch(request, connection)
+        return route.dispatch(request)
     }
 }
 
@@ -42,12 +42,11 @@ class Router {
  */
 abstract class Route {
     /**
-     * Handles an HTTP request.
+     * Provides the HTTP response to an HTTP request.
      *
      * @param request the HTTP request.
-     * @param connection the connection to the client.
      */
-    abstract fun dispatch(request: Request, connection: ClientConnection)
+    abstract fun dispatch(request: Request): Pair<List<String>, String>
 }
 
 class UnregisteredRouteException: IllegalArgumentException()

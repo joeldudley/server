@@ -44,7 +44,8 @@ class Server(private val port: Int, numberOfThreads: Int = 10) {
             threadPool.submit {
                 val clientConnection = ClientConnection(connection)
                 val request = clientConnection.parseRequest()
-                router.handleConnection(request, clientConnection)
+                val (responseHeaders, responseBody) = router.handleConnection(request)
+                clientConnection.writeResponse(responseHeaders, responseBody)
                 connection.close()
             }
         }

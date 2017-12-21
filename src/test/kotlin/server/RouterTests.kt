@@ -21,9 +21,10 @@ class RouterTests {
         val connection = ClientConnection(mockSocket)
         val request = connection.parseRequest()
 
-        router.handleConnection(request, connection)
+        val (headers, body) = router.handleConnection(request)
 
-        assertEquals(expectedGetRootRouteResponse, mockSocket.getOutputStream().toString())
+        assertEquals(expectedGetRootRouteHeaders, headers)
+        assertEquals(expectedGetRootRouteBody, body)
     }
 
     @Test
@@ -33,9 +34,10 @@ class RouterTests {
         val connection = ClientConnection(mockSocket)
         val request = connection.parseRequest()
 
-        router.handleConnection(request, connection)
+        val (headers, body) = router.handleConnection(request)
 
-        assertEquals(expectedPostRootRouteResponse, mockSocket.getOutputStream().toString())
+        assertEquals(expectedPostRootRouteHeaders, headers)
+        assertEquals(expectedPostRootRouteBody, body)
     }
 
     @Test
@@ -46,7 +48,7 @@ class RouterTests {
         val request = connection.parseRequest()
 
         assertFailsWith<UnregisteredRouteException> {
-            router.handleConnection(request, connection)
+            router.handleConnection(request)
         }
     }
 }
