@@ -1,8 +1,7 @@
 package server
 
 import org.junit.Test
-import server.Method.GET
-import server.Method.POST
+import server.Method.*
 import server.RequestHeader.CONNECTION
 import server.RequestHeader.HOST
 import kotlin.test.assertEquals
@@ -57,15 +56,14 @@ class ParseRequestTests {
     }
 
     @Test
-    fun `error is thrown if method is not GET, POST or PUT`() {
+    fun `method defaults to UNKNOWN if it is not GET, POST or PUT`() {
         val invalidRequest = "PATCH / HTTP/1.1\n\n"
 
         val mockSocket = createMockSocket(invalidRequest)
 
-        val clientConnection = ClientConnection(mockSocket)
-        assertFailsWith<UnrecognisedHTTPMethodException> {
-            clientConnection.parseRequest()
-        }
+        val connection = ClientConnection(mockSocket)
+        val request = connection.parseRequest()
+        assertEquals(UNKNOWN, request.method)
     }
 
     @Test

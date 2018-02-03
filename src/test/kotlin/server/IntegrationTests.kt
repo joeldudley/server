@@ -92,5 +92,13 @@ class IntegrationTests {
         assertEquals("Method not allowed\n", response.body()?.string())
     }
 
-    // TODO: test for unrecognised verb
+    @Test
+    fun `server throws 405 exceptions for unrecognised methods`() {
+        val client = OkHttpClient()
+        val url = URL("http://localhost:$PORT\n")
+        val request = Request.Builder().url(url).method("XYZ", null).build()
+        val response = client.newCall(request).execute()
+        assert(!response.isSuccessful)
+        assertEquals("Method not allowed\n", response.body()?.string())
+    }
 }

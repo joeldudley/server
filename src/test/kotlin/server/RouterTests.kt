@@ -65,5 +65,17 @@ class RouterTests {
         assertEquals(_405HandlerBody, response.body)
     }
 
-    // TODO: test for unrecognised verb
+    @Test
+    fun `router throws 405 exceptions for unrecognised methods`() {
+        val invalidRequest = "XYZ / HTTP/1.1\nContent-Length: 0\n\none=two"
+        val mockSocket = createMockSocket(invalidRequest)
+        val connection = ClientConnection(mockSocket)
+        val request = connection.parseRequest()
+
+        val response = router.handleConnection(request)
+
+        assertEquals(StatusLine._405, response.statusLine)
+        assertEquals(_405HandlerHeaders, response.headers)
+        assertEquals(_405HandlerBody, response.body)
+    }
 }

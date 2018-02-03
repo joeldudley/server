@@ -1,5 +1,6 @@
 package server
 
+import server.Method.UNKNOWN
 import server.ResponseHeader.*
 
 /**
@@ -26,6 +27,7 @@ class Router(routes: List<Route>) {
      * @return The headers and body of the HTTP response.
      */
     fun handleConnection(request: Request): Response {
+        if (request.method == UNKNOWN) return Response(StatusLine._405, _405HandlerHeaders, _405HandlerBody)
         val methodToHandlerMap = routeMap[request.path] ?: return Response(StatusLine._404, _404HandlerHeaders, _404HandlerBody)
         val handler = methodToHandlerMap[request.method] ?: return Response(StatusLine._405, _405HandlerHeaders, _405HandlerBody)
         return handler.dispatch(request)

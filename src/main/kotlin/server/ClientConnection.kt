@@ -43,8 +43,7 @@ class ClientConnection(connection: Socket) {
                 val body = extractBody(contentLength)
                 PutRequest(body, path, protocol, headers)
             }
-            // TODO: Need to escalate this error back to the client.
-            else -> throw UnrecognisedHTTPMethodException()
+            else -> UnknownRequest()
         }
     }
 
