@@ -3,6 +3,8 @@ package server
 import org.junit.Test
 import server.Method.GET
 import server.Method.POST
+import server.RequestHeader.CONNECTION
+import server.RequestHeader.HOST
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
@@ -76,8 +78,8 @@ class ParseRequestTests {
         val clientConnection = ClientConnection(mockSocket)
         val request = clientConnection.parseRequest()
         val headers = request.headers
-        assertEquals(headers[hostName.toLowerCase()], hostValue.toLowerCase())
-        assertEquals(headers[connectionName.toLowerCase()], connectionValue.toLowerCase())
+        assertEquals(hostValue.toLowerCase(), headers[HOST])
+        assertEquals(connectionValue.toLowerCase(), headers[CONNECTION])
     }
 
     @Test

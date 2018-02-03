@@ -91,4 +91,6 @@ class IntegrationTests {
         assert(!response.isSuccessful)
         assertEquals("Method not allowed\n", response.body()?.string())
     }
+
+    // TODO: test for unrecognised verb
 }

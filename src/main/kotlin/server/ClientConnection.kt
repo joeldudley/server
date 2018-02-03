@@ -1,8 +1,9 @@
 package server
 
-import server.Method.GET
-import server.Method.POST
+import server.RequestHeader.*
 import java.net.Socket
+
+// TODO: Split some of this functionality out into a RequestParser class
 
 /**
  * A wrapper around a connection to a client.
@@ -16,6 +17,7 @@ class ClientConnection(connection: Socket) {
     private val connectionReader = connection.getInputStream().bufferedReader()
     // Used to write to the connection.
     private val connectionWriter = connection.getOutputStream().bufferedWriter()
+    val acceptedHeaders = mapOf("host" to HOST, "connection" to CONNECTION, "content-length" to CONTENT_LENGTH)
 
     /**
      * Parses the HTTP request sent by the client.
@@ -28,19 +30,20 @@ class ClientConnection(connection: Socket) {
         return when (method) {
             "GET" -> GetRequest(path, protocol, headers)
             "POST" -> {
-                val contentLengthString = headers["content-length"]
+                val contentLengthString = headers[CONTENT_LENGTH]
                         ?: throw NoContentLengthHeaderOnPostRequestException()
                 val contentLength = contentLengthString.toInt()
                 val body = extractBody(contentLength)
                 PostRequest(body, path, protocol, headers)
             }
             "PUT" -> {
-                val contentLengthString = headers["content-length"]
+                val contentLengthString = headers[CONTENT_LENGTH]
                         ?: throw NoContentLengthHeaderOnPostRequestException()
                 val contentLength = contentLengthString.toInt()
                 val body = extractBody(contentLength)
                 PutRequest(body, path, protocol, headers)
             }
+            // TODO: Need to escalate this error back to the client.
             else -> throw UnrecognisedHTTPMethodException()
         }
     }
@@ -67,8 +70,8 @@ class ClientConnection(connection: Socket) {
      *
      * @return A mapping of the request's headers to values.
      */
-    private fun extractHeaders(): Map<String, String> {
-        val headers = mutableMapOf<String, String>()
+    private fun extractHeaders(): Map<RequestHeader, String> {
+        val headers = mutableMapOf<RequestHeader, String>()
 
         while (true) {
             val line = connectionReader.readLine() ?:
@@ -78,7 +81,11 @@ class ClientConnection(connection: Socket) {
 
             if (!line.contains(':')) throw MissingColonInHeadersException()
 
-            val (header, value) = line.toLowerCase().split(':', limit = 2).map { it.trim() }
+            // We don't need to check for too many colons, as the vault is allowed to contain colons.
+            val (headerString, value) = line.toLowerCase().split(':', limit = 2).map { it.trim() }
+
+            // We ignore unrecognised headers.
+            val header = acceptedHeaders[headerString.toLowerCase()] ?: continue
             headers.put(header, value)
         }
 
@@ -140,6 +147,7 @@ class ClientConnection(connection: Socket) {
 
 class NoContentLengthHeaderOnPostRequestException: IllegalArgumentException()
 class UnrecognisedHTTPMethodException: IllegalArgumentException()
+class UnrecognisedHeaderException: IllegalArgumentException()
 class MalformedRequestLineException: IllegalArgumentException()
 class MissingBodyNameException: IllegalArgumentException()
 class MissingBodyValueException: IllegalArgumentException()
