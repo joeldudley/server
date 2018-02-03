@@ -1,4 +1,4 @@
-package server.request
+package server
 
 abstract class Request(val method: Method, val path: String, val protocol: String, val headers: Map<String, String>)
 

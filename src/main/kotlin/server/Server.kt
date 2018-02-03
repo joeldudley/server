@@ -1,6 +1,5 @@
 package server
 
-import server.request.Method
 import java.net.ServerSocket
 import java.net.SocketException
 import java.util.concurrent.Executors
@@ -35,8 +34,8 @@ abstract class Server(port: Int, routes: List<Route>, numberOfThreads: Int = 10)
             threadPool.submit {
                 val clientConnection = ClientConnection(connection)
                 val request = clientConnection.parseRequest()
-                val (responseHeaders, responseBody) = router.handleConnection(request)
-                clientConnection.writeResponse(responseHeaders, responseBody)
+                val response = router.handleConnection(request)
+                clientConnection.writeResponse(response)
                 connection.close()
             }
         }

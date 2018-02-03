@@ -1,8 +1,8 @@
 package server
 
 import org.junit.Test
-import server.request.Method.GET
-import server.request.Method.POST
+import server.Method.GET
+import server.Method.POST
 import kotlin.test.assertEquals
 
 class RouterTests {
@@ -15,10 +15,11 @@ class RouterTests {
         val connection = ClientConnection(mockSocket)
         val request = connection.parseRequest()
 
-        val (headers, body) = router.handleConnection(request)
+        val response = router.handleConnection(request)
 
-        assertEquals(expectedGetRootHandlerHeaders, headers)
-        assertEquals(expectedGetRootHandlerBody, body)
+        assertEquals(StatusLine._200, response.statusLine)
+        assertEquals(expectedGetRootHandlerHeaders, response.headers)
+        assertEquals(expectedGetRootHandlerBody, response.body)
     }
 
     @Test
@@ -28,10 +29,11 @@ class RouterTests {
         val connection = ClientConnection(mockSocket)
         val request = connection.parseRequest()
 
-        val (headers, body) = router.handleConnection(request)
+        val response = router.handleConnection(request)
 
-        assertEquals(expectedPostRootHandlerHeaders, headers)
-        assertEquals(expectedPostRootHandlerBody, body)
+        assertEquals(StatusLine._200, response.statusLine)
+        assertEquals(expectedPostRootHandlerHeaders, response.headers)
+        assertEquals(expectedPostRootHandlerBody, response.body)
     }
 
     @Test
@@ -41,9 +43,10 @@ class RouterTests {
         val connection = ClientConnection(mockSocket)
         val request = connection.parseRequest()
 
-        val (headers, body) = router.handleConnection(request)
+        val response= router.handleConnection(request)
 
-        assertEquals(expectedUnrecognisedRouteHandlerHeaders, headers)
-        assertEquals(expectedUnrecognisedRouteHandlerBody, body)
+        assertEquals(StatusLine._500, response.statusLine)
+        assertEquals(expectedUnrecognisedRouteHandlerHeaders, response.headers)
+        assertEquals(expectedUnrecognisedRouteHandlerBody, response.body)
     }
 }

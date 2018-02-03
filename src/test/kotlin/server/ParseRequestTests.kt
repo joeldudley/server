@@ -1,9 +1,8 @@
 package server
 
 import org.junit.Test
-import server.request.Method.GET
-import server.request.Method.POST
-import server.request.PostRequest
+import server.Method.GET
+import server.Method.POST
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 

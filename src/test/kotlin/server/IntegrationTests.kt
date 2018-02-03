@@ -7,10 +7,9 @@ import okhttp3.RequestBody
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import server.request.Method.GET
-import server.request.Method.POST
+import server.Method.GET
+import server.Method.POST
 import java.net.ConnectException
-import java.net.SocketTimeoutException
 import java.net.URL
 import kotlin.concurrent.thread
 import kotlin.test.assertEquals

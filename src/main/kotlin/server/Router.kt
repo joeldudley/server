@@ -1,8 +1,5 @@
 package server
 
-import server.request.Method
-import server.request.Request
-
 /**
  * Dictates how the server handles specific HTTP requests.
  */
@@ -21,7 +18,7 @@ class Router(routes: List<Route>) {
      * @param request the HTTP request.
      * @return The headers and body of the HTTP response.
      */
-    fun handleConnection(request: Request): Pair<List<String>, String> {
+    fun handleConnection(request: Request): Response {
         val route = routeMap[request.path to request.method]
         return if (route != null) {
             route.dispatch(request)
@@ -30,8 +27,8 @@ class Router(routes: List<Route>) {
             // We add one to account for the final new-line.
             val bodyLength = body.length + 1
             // TODO: Change error message based on unrecognised path vs unrecognised method.
-            val headers = listOf("HTTP/1.1 500 Internal Server Error", "Content-Type: text/plain", "Content-Length: $bodyLength", "Connection: close")
-            return headers to body
+            val headers = listOf("Content-Type: text/plain", "Content-Length: $bodyLength", "Connection: close")
+            return Response(StatusLine._500, headers, body)
         }
     }
 }
@@ -48,7 +45,7 @@ interface Handler {
      * @param request the HTTP request.
      * @return The headers and body of the HTTP response.
      */
-    fun dispatch(request: Request): Pair<List<String>, String>
+    fun dispatch(request: Request): Response
 }
 
 /**

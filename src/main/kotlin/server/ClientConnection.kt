@@ -1,10 +1,7 @@
 package server
 
-import server.request.GetRequest
-import server.request.Method.GET
-import server.request.Method.POST
-import server.request.PostRequest
-import server.request.Request
+import server.Method.GET
+import server.Method.POST
 import java.net.Socket
 
 /**
@@ -120,13 +117,15 @@ class ClientConnection(connection: Socket) {
      *
      * @return The HTTP response's headers and body.
      */
-    internal fun writeResponse(headers: List<String>, body: String) {
-        for (header in headers) {
+    internal fun writeResponse(response: Response) {
+        connectionWriter.write(response.statusLine.toString())
+        connectionWriter.newLine()
+        for (header in response.headers) {
             connectionWriter.write(header)
             connectionWriter.newLine()
         }
         connectionWriter.newLine()
-        connectionWriter.write(body)
+        connectionWriter.write(response.body)
         connectionWriter.newLine()
         connectionWriter.flush()
     }
