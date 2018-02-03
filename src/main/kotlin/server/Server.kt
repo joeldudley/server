@@ -19,14 +19,7 @@ abstract class Server(port: Int, routes: List<Route>, numberOfThreads: Int = 10)
     // The threads for handling HTTP requests.
     private val threadPool = Executors.newFixedThreadPool(numberOfThreads)
     // Prepares a response to HTTP requests based on their path.
-    private val router = Router()
-
-    init {
-        // We register all the routes provided in the constructor.
-        routes.forEach { (path, method, handler) ->
-            router.registerHandler(path, method, handler)
-        }
-    }
+    private val router = Router(routes)
 
     /** Starts the server running in a loop. */
     fun start() {
@@ -54,16 +47,3 @@ abstract class Server(port: Int, routes: List<Route>, numberOfThreads: Int = 10)
         serverSocket.close()
     }
 }
-
-/**
- * A route.
- *
- * @param path the path the route handles.
- * @param method the HTTP method the route handles.
- * @param handler how to respond to the request.
- */
-data class Route(
-        val path: String,
-        val method: Method,
-        val handler: Handler
-)

@@ -1,6 +1,5 @@
 package server
 
-import org.junit.Before
 import org.junit.Test
 import server.request.Method.GET
 import server.request.Method.POST
@@ -8,13 +7,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class RouterTests {
-    private val router = Router()
-
-    @Before
-    fun setUp() {
-        router.registerHandler("/", GET, getRootHandler)
-        router.registerHandler("/", POST, postRootHandler)
-    }
+    private val router = Router(listOf(Route("/", GET, getRootHandler), Route("/", POST, postRootHandler)))
 
     @Test
     fun `router dispatches correctly to known GET routes`() {

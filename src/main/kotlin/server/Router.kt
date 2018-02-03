@@ -8,8 +8,14 @@ import server.request.Request
  *
  * Individual [Handler]s are installed using the [registerHandler] method.
  */
-class Router {
-    private val routes = mutableMapOf<Pair<String, Method>, Handler>()
+class Router(routes: List<Route>) {
+    private val routeMap = mutableMapOf<Pair<String, Method>, Handler>()
+
+    init {
+        routes.forEach { (path, method, handler) ->
+            routeMap[path to method] = handler
+        }
+    }
 
     /**
      * Adds a [Handler] to the router.
@@ -19,7 +25,7 @@ class Router {
      * @param handler how to respond to the request.
      */
     fun registerHandler(path: String, method: Method, handler: Handler) {
-        routes[path to method] = handler
+        routeMap[path to method] = handler
     }
 
     /**
@@ -30,7 +36,7 @@ class Router {
      */
     fun handleConnection(request: Request): Pair<List<String>, String> {
         // TODO: Introduce error handlers for unrecognised routes
-        val route = routes[request.path to request.method] ?: throw UnregisteredRouteException()
+        val route = routeMap[request.path to request.method] ?: throw UnregisteredRouteException()
         return route.dispatch(request)
     }
 }
@@ -49,5 +55,18 @@ interface Handler {
      */
     fun dispatch(request: Request): Pair<List<String>, String>
 }
+
+/**
+ * A route.
+ *
+ * @param path the path the route handles.
+ * @param method the HTTP method the route handles.
+ * @param handler how to respond to the request.
+ */
+data class Route(
+        val path: String,
+        val method: Method,
+        val handler: Handler
+)
 
 class UnregisteredRouteException: IllegalArgumentException()

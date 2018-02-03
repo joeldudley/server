@@ -3,8 +3,6 @@ package server
 import server.request.Method
 import server.request.Request
 
-private val PORT = 4444
-
 private val getReceivedRoute = Route("/", Method.GET, object : Handler {
     override fun dispatch(request: Request): Pair<List<String>, String> {
         val body = "GET received"
