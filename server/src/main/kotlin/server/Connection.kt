@@ -145,8 +145,6 @@ class Connection(connection: Socket) {
 }
 
 class NoContentLengthHeaderOnPostRequestException: IllegalArgumentException()
-class UnrecognisedHTTPMethodException: IllegalArgumentException()
-class UnrecognisedHeaderException: IllegalArgumentException()
 class MalformedRequestLineException: IllegalArgumentException()
 class MissingBodyNameException: IllegalArgumentException()
 class MissingBodyValueException: IllegalArgumentException()
