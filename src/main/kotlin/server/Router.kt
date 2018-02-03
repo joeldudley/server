@@ -6,24 +6,24 @@ import server.request.Request
 /**
  * Dictates how the server handles specific HTTP requests.
  *
- * Individual [Route]s are installed using the [registerRoute] method.
+ * Individual [Handler]s are installed using the [registerHandler] method.
  */
 class Router {
-    private val routes = mutableMapOf<Pair<String, Method>, Route>()
+    private val routes = mutableMapOf<Pair<String, Method>, Handler>()
 
     /**
-     * Adds a [Route] to the router.
+     * Adds a [Handler] to the router.
      *
      * @param path the path the route handles.
      * @param method the HTTP method the route handles.
-     * @param route how to respond to the request.
+     * @param handler how to respond to the request.
      */
-    fun registerRoute(path: String, method: Method, route: Route) {
-        routes[path to method] = route
+    fun registerHandler(path: String, method: Method, handler: Handler) {
+        routes[path to method] = handler
     }
 
     /**
-     * Routes an HTTP request to the correct [Route].
+     * Routes an HTTP request to the correct [Handler].
      *
      * @param request the HTTP request.
      * @return The headers and body of the HTTP response.
@@ -40,14 +40,14 @@ class Router {
  *
  * The route defines how an HTTP request is handled by overriding [dispatch].
  */
-abstract class Route {
+interface Handler {
     /**
      * Provides the HTTP response to an HTTP request.
      *
      * @param request the HTTP request.
      * @return The headers and body of the HTTP response.
      */
-    abstract fun dispatch(request: Request): Pair<List<String>, String>
+    fun dispatch(request: Request): Pair<List<String>, String>
 }
 
 class UnregisteredRouteException: IllegalArgumentException()

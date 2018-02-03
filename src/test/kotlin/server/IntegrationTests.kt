@@ -16,17 +16,16 @@ import kotlin.concurrent.thread
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
+private val PORT = 4444
+
 // TODO: Tests of the server receiving junk and responding gracefully.
 // TODO: Tests of server reusing threads.
-
 class IntegrationTests {
     private lateinit var server: Server
 
     @Before
     fun setUp() {
-        server = Server(PORT)
-        server.registerRoute("/", GET, getRootRoute)
-        server.registerRoute("/", POST, postRootRoute)
+        server = object: Server(PORT, listOf(Route("/", GET, getRootHandler), Route("/", POST, postRootHandler))) {}
         // The server needs to run on a separate thread, or there won't be a thread for the tests.
         thread(start = true) {
             server.start()

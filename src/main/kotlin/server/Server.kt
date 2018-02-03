@@ -8,10 +8,12 @@ import java.util.concurrent.Executors
 /**
  * A server.
  *
+ * Subclass it to provide the routes that the server supports.
+ *
  * @param port The port the server listens on.
  * @param numberOfThreads The number of threads the server uses to handle requests.
  */
-class Server(private val port: Int, numberOfThreads: Int = 10) {
+abstract class Server(port: Int, routes: List<Route>, numberOfThreads: Int = 10) {
     // The server socket listens for localhost connections on the specified port.
     private val serverSocket = ServerSocket(port)
     // The threads for handling HTTP requests.
@@ -19,15 +21,11 @@ class Server(private val port: Int, numberOfThreads: Int = 10) {
     // Prepares a response to HTTP requests based on their path.
     private val router = Router()
 
-    /**
-     * Adds a route to the router.
-     *
-     * @param path the path the route handles.
-     * @param method the HTTP method the route handles.
-     * @param route how to respond to the request.
-     */
-    fun registerRoute(path: String, method: Method, route: Route) {
-        router.registerRoute(path, method, route)
+    init {
+        // We register all the routes provided in the constructor.
+        routes.forEach { (path, method, handler) ->
+            router.registerHandler(path, method, handler)
+        }
     }
 
     /** Starts the server running in a loop. */
@@ -56,3 +54,16 @@ class Server(private val port: Int, numberOfThreads: Int = 10) {
         serverSocket.close()
     }
 }
+
+/**
+ * A route.
+ *
+ * @param path the path the route handles.
+ * @param method the HTTP method the route handles.
+ * @param handler how to respond to the request.
+ */
+data class Route(
+        val path: String,
+        val method: Method,
+        val handler: Handler
+)

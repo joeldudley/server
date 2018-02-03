@@ -1,11 +1,11 @@
 package server
 
-val expectedGetRootRouteHeaders = listOf("HTTP/1.1 200 OK", "Content-Type: text/plain", "Content-Length: 13", "Connection: close")
-val expectedGetRootRouteBody = "GET received"
-val expectedPostRootRouteHeaders = listOf("HTTP/1.1 200 OK", "Content-Type: text/plain", "Content-Length: 14", "Connection: close")
-val expectedPostRootRouteBody = "POST received"
+val expectedGetRootHandlerHeaders = listOf("HTTP/1.1 200 OK", "Content-Type: text/plain", "Content-Length: 13", "Connection: close")
+val expectedGetRootHandlerBody = "GET received"
+val expectedPostRootHandlerHeaders = listOf("HTTP/1.1 200 OK", "Content-Type: text/plain", "Content-Length: 14", "Connection: close")
+val expectedPostRootHandlerBody = "POST received"
 
-val getRootRoute = object : Route() {
+val getRootHandler = object : Handler {
     override fun dispatch(request: server.request.Request): Pair<List<String>, String> {
         val body = "GET received"
         // We add one to account for the final new-line.
@@ -15,7 +15,7 @@ val getRootRoute = object : Route() {
     }
 }
 
-val postRootRoute = object : Route() {
+val postRootHandler = object : Handler {
     override fun dispatch(request: server.request.Request): Pair<List<String>, String> {
         val body = "POST received"
         // We add one to account for the final new-line.

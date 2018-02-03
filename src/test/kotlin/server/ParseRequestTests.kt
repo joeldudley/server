@@ -99,7 +99,7 @@ class ParseRequestTests {
         val invalidRequest1 = "GET / HTTP/1.1\n"
         val invalidRequest2 = "GET / HTTP/1.1\nHost: localhost\n"
 
-        for (invalidRequest in listOf(invalidRequest1, invalidRequest2)) {
+        listOf(invalidRequest1, invalidRequest2).forEach { invalidRequest ->
             val mockSocket = createMockSocket(invalidRequest)
 
             val clientConnection = ClientConnection(mockSocket)

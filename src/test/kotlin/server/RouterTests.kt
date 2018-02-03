@@ -2,6 +2,8 @@ package server
 
 import org.junit.Before
 import org.junit.Test
+import server.request.Method.GET
+import server.request.Method.POST
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
@@ -10,8 +12,8 @@ class RouterTests {
 
     @Before
     fun setUp() {
-        router.registerRoute("/", server.request.Method.GET, getRootRoute)
-        router.registerRoute("/", server.request.Method.POST, postRootRoute)
+        router.registerHandler("/", GET, getRootHandler)
+        router.registerHandler("/", POST, postRootHandler)
     }
 
     @Test
@@ -23,8 +25,8 @@ class RouterTests {
 
         val (headers, body) = router.handleConnection(request)
 
-        assertEquals(expectedGetRootRouteHeaders, headers)
-        assertEquals(expectedGetRootRouteBody, body)
+        assertEquals(expectedGetRootHandlerHeaders, headers)
+        assertEquals(expectedGetRootHandlerBody, body)
     }
 
     @Test
@@ -36,8 +38,8 @@ class RouterTests {
 
         val (headers, body) = router.handleConnection(request)
 
-        assertEquals(expectedPostRootRouteHeaders, headers)
-        assertEquals(expectedPostRootRouteBody, body)
+        assertEquals(expectedPostRootHandlerHeaders, headers)
+        assertEquals(expectedPostRootHandlerBody, body)
     }
 
     @Test
