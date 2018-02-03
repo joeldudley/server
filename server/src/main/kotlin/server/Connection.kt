@@ -12,7 +12,7 @@ import java.net.Socket
  *
  * @param connection The connection to the client.
  */
-class ClientConnection(connection: Socket) {
+class Connection(connection: Socket) {
     // Used to read from the connection.
     private val connectionReader = connection.getInputStream().bufferedReader()
     // Used to write to the connection.

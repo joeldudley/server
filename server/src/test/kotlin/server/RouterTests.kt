@@ -13,7 +13,7 @@ class RouterTests {
     fun `router dispatches correctly to known GET routes`() {
         val validRequest = "GET / HTTP/1.1\n\n"
         val mockSocket = createMockSocket(validRequest)
-        val connection = ClientConnection(mockSocket)
+        val connection = Connection(mockSocket)
         val request = connection.parseRequest()
 
         val response = router.handleConnection(request)
@@ -27,7 +27,7 @@ class RouterTests {
     fun `router dispatches correctly to known POST routes`() {
         val validRequest = "POST / HTTP/1.1\nContent-Length: 0\n\none=two"
         val mockSocket = createMockSocket(validRequest)
-        val connection = ClientConnection(mockSocket)
+        val connection = Connection(mockSocket)
         val request = connection.parseRequest()
 
         val response = router.handleConnection(request)
@@ -41,7 +41,7 @@ class RouterTests {
     fun `router throws 404 exceptions for unregistered paths`() {
         val invalidRequest = "GET /test HTTP/1.1\n\n"
         val mockSocket = createMockSocket(invalidRequest)
-        val connection = ClientConnection(mockSocket)
+        val connection = Connection(mockSocket)
         val request = connection.parseRequest()
 
         val response = router.handleConnection(request)
@@ -55,7 +55,7 @@ class RouterTests {
     fun `router throws 405 exceptions for unallowed methods`() {
         val invalidRequest = "PUT / HTTP/1.1\nContent-Length: 0\n\none=two"
         val mockSocket = createMockSocket(invalidRequest)
-        val connection = ClientConnection(mockSocket)
+        val connection = Connection(mockSocket)
         val request = connection.parseRequest()
 
         val response = router.handleConnection(request)
@@ -69,7 +69,7 @@ class RouterTests {
     fun `router throws 405 exceptions for unrecognised methods`() {
         val invalidRequest = "XYZ / HTTP/1.1\nContent-Length: 0\n\none=two"
         val mockSocket = createMockSocket(invalidRequest)
-        val connection = ClientConnection(mockSocket)
+        val connection = Connection(mockSocket)
         val request = connection.parseRequest()
 
         val response = router.handleConnection(request)

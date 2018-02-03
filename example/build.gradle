@@ -1,0 +1,29 @@
+apply plugin: "kotlin"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8"
+    compile "org.jetbrains.kotlin:kotlin-reflect"
+    testCompile "org.jetbrains.kotlin:kotlin-test"
+    testCompile "org.jetbrains.kotlin:kotlin-test-junit"
+
+    compile project(":server")
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": "server.MainKt"
+    }
+
+    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+}
+
+// TODO: Modify this task to kill the webserver as well.
+task runServer(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'server.MainKt'
+    args '4444'
+}

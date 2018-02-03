@@ -16,7 +16,7 @@ class ParseRequestTests {
 
         val mockSocket = createMockSocket(validRequestLine)
 
-        val connection = ClientConnection(mockSocket)
+        val connection = Connection(mockSocket)
         val request = connection.parseRequest()
         assertEquals(request.method, method)
         assertEquals(request.path, path)
@@ -30,7 +30,7 @@ class ParseRequestTests {
 
         val mockSocket = createMockSocket(invalidRequestLine)
 
-        val connection = ClientConnection(mockSocket)
+        val connection = Connection(mockSocket)
         assertFailsWith<MalformedRequestLineException> {
             connection.parseRequest()
         }
@@ -42,7 +42,7 @@ class ParseRequestTests {
 
         val mockGetSocket = createMockSocket(validGetRequest)
 
-        val getConnection = ClientConnection(mockGetSocket)
+        val getConnection = Connection(mockGetSocket)
         val getRequest = getConnection.parseRequest()
         assert(getRequest.method == GET)
 
@@ -50,7 +50,7 @@ class ParseRequestTests {
 
         val mockPostSocket = createMockSocket(validPostRequest)
 
-        val postConnection = ClientConnection(mockPostSocket)
+        val postConnection = Connection(mockPostSocket)
         val postRequest = postConnection.parseRequest()
         assert(postRequest.method == POST)
     }
@@ -61,7 +61,7 @@ class ParseRequestTests {
 
         val mockSocket = createMockSocket(invalidRequest)
 
-        val connection = ClientConnection(mockSocket)
+        val connection = Connection(mockSocket)
         val request = connection.parseRequest()
         assertEquals(UNKNOWN, request.method)
     }
@@ -73,8 +73,8 @@ class ParseRequestTests {
 
         val mockSocket = createMockSocket(validRequest)
 
-        val clientConnection = ClientConnection(mockSocket)
-        val request = clientConnection.parseRequest()
+        val Connection = Connection(mockSocket)
+        val request = Connection.parseRequest()
         val headers = request.headers
         assertEquals(hostValue.toLowerCase(), headers[HOST])
         assertEquals(connectionValue.toLowerCase(), headers[CONNECTION])
@@ -87,9 +87,9 @@ class ParseRequestTests {
 
         val mockSocket = createMockSocket(invalidRequest)
 
-        val clientConnection = ClientConnection(mockSocket)
+        val Connection = Connection(mockSocket)
         assertFailsWith<MissingColonInHeadersException> {
-            clientConnection.parseRequest()
+            Connection.parseRequest()
         }
     }
 
@@ -101,9 +101,9 @@ class ParseRequestTests {
         listOf(invalidRequest1, invalidRequest2).forEach { invalidRequest ->
             val mockSocket = createMockSocket(invalidRequest)
 
-            val clientConnection = ClientConnection(mockSocket)
+            val Connection = Connection(mockSocket)
             assertFailsWith<NoBlankLineAfterHeadersException> {
-                clientConnection.parseRequest()
+                Connection.parseRequest()
             }
         }
     }
@@ -114,9 +114,9 @@ class ParseRequestTests {
 
         val mockSocket = createMockSocket(invalidRequest)
 
-        val clientConnection = ClientConnection(mockSocket)
+        val Connection = Connection(mockSocket)
         assertFailsWith<NoContentLengthHeaderOnPostRequestException> {
-            clientConnection.parseRequest()
+            Connection.parseRequest()
         }
     }
 
@@ -128,8 +128,8 @@ class ParseRequestTests {
 
         val mockSocket = createMockSocket(validRequest)
 
-        val clientConnection = ClientConnection(mockSocket)
-        val request = clientConnection.parseRequest()
+        val Connection = Connection(mockSocket)
+        val request = Connection.parseRequest()
         assert(request is PostRequest)
         val shortenedParam2 = param2.subSequence(0..param2.length - 2)
         assertEquals((request as PostRequest).body, mapOf(name1 to param1, name2 to shortenedParam2))
@@ -143,8 +143,8 @@ class ParseRequestTests {
 
         val mockSocket = createMockSocket(validRequest)
 
-        val clientConnection = ClientConnection(mockSocket)
-        val request = clientConnection.parseRequest()
+        val Connection = Connection(mockSocket)
+        val request = Connection.parseRequest()
         assert(request is PostRequest)
         assertEquals((request as PostRequest).body, mapOf(name1 to param1, name2 to param2))
     }
@@ -156,9 +156,9 @@ class ParseRequestTests {
 
         val mockSocket = createMockSocket(invalidRequest)
 
-        val clientConnection = ClientConnection(mockSocket)
+        val Connection = Connection(mockSocket)
         assertFailsWith<MissingBodyValueException> {
-            clientConnection.parseRequest()
+            Connection.parseRequest()
         }
     }
 
@@ -169,9 +169,9 @@ class ParseRequestTests {
 
         val mockSocket = createMockSocket(invalidRequest)
 
-        val clientConnection = ClientConnection(mockSocket)
+        val Connection = Connection(mockSocket)
         assertFailsWith<MissingBodyNameException> {
-            clientConnection.parseRequest()
+            Connection.parseRequest()
         }
     }
 
@@ -182,7 +182,7 @@ class ParseRequestTests {
 
         val mockSocket = createMockSocket(invalidRequest)
 
-        val connection = ClientConnection(mockSocket)
+        val connection = Connection(mockSocket)
         assertFailsWith<RepeatedBodyNameException> {
             connection.parseRequest()
         }
@@ -194,7 +194,7 @@ class ParseRequestTests {
 
         val mockSocket = createMockSocket(validRequest)
 
-        val connection = ClientConnection(mockSocket)
+        val connection = Connection(mockSocket)
         val request = connection.parseRequest()
         assert(request.method == POST)
         assertEquals((request as PostRequest).body, mapOf())

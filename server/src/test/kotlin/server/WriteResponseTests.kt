@@ -14,8 +14,8 @@ class WriteResponseTests {
 
         val mockSocket = createMockSocket()
 
-        val clientConnection = ClientConnection(mockSocket)
-        clientConnection.writeResponse(response)
+        val connection = Connection(mockSocket)
+        connection.writeResponse(response)
 
         val expectedResponse = "${StatusLine._200}\n" + headers.joinToString("\n") + "\n\n" + "$body\n"
         assertEquals(expectedResponse, mockSocket.getOutputStream().toString())

@@ -23,7 +23,7 @@ abstract class Server(port: Int, routes: List<Route>, numberOfThreads: Int = 10)
     /** Starts the server running in a loop. */
     fun start() {
         while (true) {
-            val connection = try {
+            val socket = try {
                 serverSocket.accept()
             } catch (e: SocketException) {
                 // The server has been shut down.
@@ -32,11 +32,11 @@ abstract class Server(port: Int, routes: List<Route>, numberOfThreads: Int = 10)
 
             // Each request is assigned its own thread.
             threadPool.submit {
-                val clientConnection = ClientConnection(connection)
-                val request = clientConnection.parseRequest()
+                val connection = Connection(socket)
+                val request = connection.parseRequest()
                 val response = router.handleConnection(request)
-                clientConnection.writeResponse(response)
-                connection.close()
+                connection.writeResponse(response)
+                socket.close()
             }
         }
     }
