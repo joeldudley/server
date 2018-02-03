@@ -10,11 +10,11 @@ class Router(routes: List<Route>) {
 
     init {
         routes.forEach { (path, method, handler) ->
-            // TODO: Use default dict
-            if (path in routeMap) {
-                routeMap[path]!!.put(method, handler)
-            } else {
+            val methodToHandlerMap = routeMap[path]
+            if (methodToHandlerMap == null) {
                 routeMap[path] = mutableMapOf(method to handler)
+            } else {
+                methodToHandlerMap.put(method, handler)
             }
         }
     }
@@ -26,7 +26,6 @@ class Router(routes: List<Route>) {
      * @return The headers and body of the HTTP response.
      */
     fun handleConnection(request: Request): Response {
-        // TODO: Change error message based on unrecognised path vs unrecognised method.
         val methodToHandlerMap = routeMap[request.path] ?: return Response(StatusLine._404, _404HandlerHeaders, _404HandlerBody)
         val handler = methodToHandlerMap[request.method] ?: return Response(StatusLine._405, _405HandlerHeaders, _405HandlerBody)
         return handler.dispatch(request)
