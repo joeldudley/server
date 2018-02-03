@@ -46,7 +46,7 @@ class RouterTests {
         val response= router.handleConnection(request)
 
         assertEquals(StatusLine._500, response.statusLine)
-        assertEquals(expectedUnrecognisedRouteHandlerHeaders, response.headers)
-        assertEquals(expectedUnrecognisedRouteHandlerBody, response.body)
+        assertEquals(unrecognisedRouteHandlerHeaders, response.headers)
+        assertEquals(unrecognisedRouteHandlerBody, response.body)
     }
 }

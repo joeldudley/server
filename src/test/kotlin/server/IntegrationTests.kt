@@ -19,6 +19,7 @@ private val PORT = 4444
 
 // TODO: Tests of the server receiving junk and responding gracefully.
 // TODO: Tests of server reusing threads.
+// TODO: Check headers here?
 class IntegrationTests {
     private lateinit var server: Server
 
@@ -43,7 +44,7 @@ class IntegrationTests {
         val request = Request.Builder().url(url).build()
         val response = client.newCall(request).execute()
         assert(response.isSuccessful)
-        assertEquals(response.body()?.string(), "GET received\n")
+        assertEquals("GET received\n", response.body()?.string())
     }
 
     @Test
@@ -55,7 +56,7 @@ class IntegrationTests {
         val request = Request.Builder().url(url).post(body).build()
         val response = client.newCall(request).execute()
         assert(response.isSuccessful)
-        assertEquals(response.body()?.string(), "POST received\n")
+        assertEquals("POST received\n", response.body()?.string())
     }
 
     @Test
@@ -76,6 +77,6 @@ class IntegrationTests {
         val request = Request.Builder().url(url).build()
         val response = client.newCall(request).execute()
         assert(!response.isSuccessful)
-        assertEquals(response.body()?.string(), "Unrecognised route\n")
+        assertEquals("Unrecognised route\n", response.body()?.string())
     }
 }

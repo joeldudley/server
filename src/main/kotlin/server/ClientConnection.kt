@@ -121,7 +121,7 @@ class ClientConnection(connection: Socket) {
         connectionWriter.write(response.statusLine.toString())
         connectionWriter.newLine()
         for (header in response.headers) {
-            connectionWriter.write(header)
+            connectionWriter.write(header.toString())
             connectionWriter.newLine()
         }
         connectionWriter.newLine()

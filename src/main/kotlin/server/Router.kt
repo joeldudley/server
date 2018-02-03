@@ -1,5 +1,7 @@
 package server
 
+import server.ResponseHeader.*
+
 /**
  * Dictates how the server handles specific HTTP requests.
  */
@@ -23,12 +25,8 @@ class Router(routes: List<Route>) {
         return if (route != null) {
             route.dispatch(request)
         } else {
-            val body = "Unrecognised route"
-            // We add one to account for the final new-line.
-            val bodyLength = body.length + 1
             // TODO: Change error message based on unrecognised path vs unrecognised method.
-            val headers = listOf("Content-Type: text/plain", "Content-Length: $bodyLength", "Connection: close")
-            return Response(StatusLine._500, headers, body)
+            return Response(StatusLine._500, unrecognisedRouteHandlerHeaders, unrecognisedRouteHandlerBody)
         }
     }
 }
@@ -60,3 +58,9 @@ data class Route(
         val method: Method,
         val handler: Handler
 )
+
+val unrecognisedRouteHandlerBody = "Unrecognised route"
+val unrecognisedRouteHandlerHeaders = listOf(
+        ContentType("text/plain"),
+        ContentLength(unrecognisedRouteHandlerBody.length + 1),
+        Connection("close"))

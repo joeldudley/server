@@ -1,6 +1,7 @@
 package server
 
 import org.junit.Test
+import server.ResponseHeader.*
 import kotlin.test.assertEquals
 
 class WriteResponseTests {
@@ -8,7 +9,8 @@ class WriteResponseTests {
     @Test
     fun `response is written correctly`() {
         val body = "Test body"
-        val headers = listOf("Content-Type: text/plain", "Content-Length: ${body.length + 1}", "Connection: close")
+        val bodyLength = body.length + 1
+        val headers = listOf(ContentType("text/plain"), ContentLength(bodyLength), Connection("close"))
         val response = Response(StatusLine._200, headers, body)
 
         val mockSocket = createMockSocket()
