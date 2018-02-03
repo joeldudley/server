@@ -75,9 +75,8 @@ class IntegrationTests {
         val client = OkHttpClient()
         val url = URL("http://localhost:$PORT/test\n")
         val request = Request.Builder().url(url).build()
-
-        assertFailsWith<SocketTimeoutException> {
-            client.newCall(request).execute()
-        }
+        val response = client.newCall(request).execute()
+        assert(!response.isSuccessful)
+        assertEquals(response.body()?.string(), "Unrecognised route\n")
     }
 }

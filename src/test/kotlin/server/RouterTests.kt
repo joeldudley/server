@@ -4,7 +4,6 @@ import org.junit.Test
 import server.request.Method.GET
 import server.request.Method.POST
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 class RouterTests {
     private val router = Router(listOf(Route("/", GET, getRootHandler), Route("/", POST, postRootHandler)))
@@ -42,8 +41,9 @@ class RouterTests {
         val connection = ClientConnection(mockSocket)
         val request = connection.parseRequest()
 
-        assertFailsWith<UnregisteredRouteException> {
-            router.handleConnection(request)
-        }
+        val (headers, body) = router.handleConnection(request)
+
+        assertEquals(expectedUnrecognisedRouteHandlerHeaders, headers)
+        assertEquals(expectedUnrecognisedRouteHandlerBody, body)
     }
 }

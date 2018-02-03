@@ -22,10 +22,17 @@ class Router(routes: List<Route>) {
      * @return The headers and body of the HTTP response.
      */
     fun handleConnection(request: Request): Pair<List<String>, String> {
-        // TODO: Introduce error handlers for unrecognised paths
-        // TODO: Introduce error handlers for unrecognised methods
-        val route = routeMap[request.path to request.method] ?: throw UnregisteredRouteException()
-        return route.dispatch(request)
+        val route = routeMap[request.path to request.method]
+        return if (route != null) {
+            route.dispatch(request)
+        } else {
+            val body = "Unrecognised route"
+            // We add one to account for the final new-line.
+            val bodyLength = body.length + 1
+            // TODO: Change error message based on unrecognised path vs unrecognised method.
+            val headers = listOf("HTTP/1.1 500 Internal Server Error", "Content-Type: text/plain", "Content-Length: $bodyLength", "Connection: close")
+            return headers to body
+        }
     }
 }
 
@@ -57,4 +64,5 @@ data class Route(
         val handler: Handler
 )
 
-class UnregisteredRouteException: IllegalArgumentException()
+class UnregisteredRouteException : IllegalArgumentException()
+

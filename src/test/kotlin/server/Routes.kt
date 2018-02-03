@@ -4,6 +4,8 @@ val expectedGetRootHandlerHeaders = listOf("HTTP/1.1 200 OK", "Content-Type: tex
 val expectedGetRootHandlerBody = "GET received"
 val expectedPostRootHandlerHeaders = listOf("HTTP/1.1 200 OK", "Content-Type: text/plain", "Content-Length: 14", "Connection: close")
 val expectedPostRootHandlerBody = "POST received"
+val expectedUnrecognisedRouteHandlerHeaders = listOf("HTTP/1.1 500 Internal Server Error", "Content-Type: text/plain", "Content-Length: 19", "Connection: close")
+val expectedUnrecognisedRouteHandlerBody = "Unrecognised route"
 
 val getRootHandler = object : Handler {
     override fun dispatch(request: server.request.Request): Pair<List<String>, String> {
