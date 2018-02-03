@@ -9,8 +9,7 @@ class WriteResponseTests {
     @Test
     fun `response is written correctly`() {
         val body = "Test body"
-        val bodyLength = body.length + 1
-        val headers = listOf(ContentType("text/plain"), ContentLength(bodyLength), Connection("close"))
+        val headers = listOf(ContentType("text/plain"), ContentLength(body.length + 1), Connection("close"))
         val response = Response(StatusLine._200, headers, body)
 
         val mockSocket = createMockSocket()
