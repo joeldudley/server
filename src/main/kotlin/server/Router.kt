@@ -63,6 +63,3 @@ data class Route(
         val method: Method,
         val handler: Handler
 )
-
-class UnregisteredRouteException : IllegalArgumentException()
-
