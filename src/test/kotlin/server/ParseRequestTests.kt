@@ -55,8 +55,8 @@ class ParseRequestTests {
     }
 
     @Test
-    fun `error is thrown if method is not GET or POST`() {
-        val invalidRequest = "PUT / HTTP/1.1\n\n"
+    fun `error is thrown if method is not GET, POST or PUT`() {
+        val invalidRequest = "PATCH / HTTP/1.1\n\n"
 
         val mockSocket = createMockSocket(invalidRequest)
 

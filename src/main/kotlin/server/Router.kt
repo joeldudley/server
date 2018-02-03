@@ -6,11 +6,16 @@ import server.ResponseHeader.*
  * Dictates how the server handles specific HTTP requests.
  */
 class Router(routes: List<Route>) {
-    private val routeMap = mutableMapOf<Pair<String, Method>, Handler>()
+    private val routeMap = mutableMapOf<String, MutableMap<Method, Handler>>()
 
     init {
         routes.forEach { (path, method, handler) ->
-            routeMap[path to method] = handler
+            // TODO: Use default dict
+            if (path in routeMap) {
+                routeMap[path]!!.put(method, handler)
+            } else {
+                routeMap[path] = mutableMapOf(method to handler)
+            }
         }
     }
 
@@ -21,13 +26,10 @@ class Router(routes: List<Route>) {
      * @return The headers and body of the HTTP response.
      */
     fun handleConnection(request: Request): Response {
-        val route = routeMap[request.path to request.method]
-        return if (route != null) {
-            route.dispatch(request)
-        } else {
-            // TODO: Change error message based on unrecognised path vs unrecognised method.
-            return Response(StatusLine._500, unrecognisedRouteHandlerHeaders, unrecognisedRouteHandlerBody)
-        }
+        // TODO: Change error message based on unrecognised path vs unrecognised method.
+        val methodToHandlerMap = routeMap[request.path] ?: return Response(StatusLine._404, _404HandlerHeaders, _404HandlerBody)
+        val handler = methodToHandlerMap[request.method] ?: return Response(StatusLine._405, _405HandlerHeaders, _405HandlerBody)
+        return handler.dispatch(request)
     }
 }
 
@@ -59,8 +61,14 @@ data class Route(
         val handler: Handler
 )
 
-val unrecognisedRouteHandlerBody = "Unrecognised route"
-val unrecognisedRouteHandlerHeaders = listOf(
+val _404HandlerBody = "Not found"
+val _404HandlerHeaders = listOf(
         ContentType("text/plain"),
-        ContentLength(unrecognisedRouteHandlerBody.length + 1),
+        ContentLength(_404HandlerBody.length + 1),
+        Connection("close"))
+
+val _405HandlerBody = "Method not allowed"
+val _405HandlerHeaders = listOf(
+        ContentType("text/plain"),
+        ContentLength(_405HandlerBody.length + 1),
         Connection("close"))

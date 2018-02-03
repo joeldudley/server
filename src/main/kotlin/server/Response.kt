@@ -6,8 +6,11 @@ sealed class StatusLine {
     object _200: StatusLine() {
         override fun toString() = "HTTP/1.1 200 OK"
     }
-    object _500: StatusLine() {
-        override fun toString() = "HTTP/1.1 500 Internal Server Error"
+    object _404: StatusLine() {
+        override fun toString() = "HTTP/1.1 404 Not Found"
+    }
+    object _405: StatusLine() {
+        override fun toString() = "HTTP/1.1 405 Method Not Allowed"
     }
 }
 

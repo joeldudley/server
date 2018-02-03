@@ -71,12 +71,24 @@ class IntegrationTests {
     }
 
     @Test
-    fun `server rejects connections on unregistered routes`() {
+    fun `server throws 404 exceptions for unregistered paths`() {
         val client = OkHttpClient()
         val url = URL("http://localhost:$PORT/test\n")
         val request = Request.Builder().url(url).build()
         val response = client.newCall(request).execute()
         assert(!response.isSuccessful)
-        assertEquals("Unrecognised route\n", response.body()?.string())
+        assertEquals("Not found\n", response.body()?.string())
+    }
+
+    @Test
+    fun `server throws 405 exceptions for unallowed methods`() {
+        val client = OkHttpClient()
+        val url = URL("http://localhost:$PORT\n")
+        val mediaType = MediaType.parse("application/json")
+        val body = RequestBody.create(mediaType, "one=two&three=four")
+        val request = Request.Builder().url(url).put(body).build()
+        val response = client.newCall(request).execute()
+        assert(!response.isSuccessful)
+        assertEquals("Method not allowed\n", response.body()?.string())
     }
 }

@@ -26,13 +26,20 @@ class ClientConnection(connection: Socket) {
         val (method, path, protocol) = extractRequestLine()
         val headers = extractHeaders()
         return when (method) {
-            "GET" -> GetRequest(GET, path, protocol, headers)
+            "GET" -> GetRequest(path, protocol, headers)
             "POST" -> {
                 val contentLengthString = headers["content-length"]
                         ?: throw NoContentLengthHeaderOnPostRequestException()
                 val contentLength = contentLengthString.toInt()
                 val body = extractBody(contentLength)
-                PostRequest(body, POST, path, protocol, headers)
+                PostRequest(body, path, protocol, headers)
+            }
+            "PUT" -> {
+                val contentLengthString = headers["content-length"]
+                        ?: throw NoContentLengthHeaderOnPostRequestException()
+                val contentLength = contentLengthString.toInt()
+                val body = extractBody(contentLength)
+                PutRequest(body, path, protocol, headers)
             }
             else -> throw UnrecognisedHTTPMethodException()
         }
