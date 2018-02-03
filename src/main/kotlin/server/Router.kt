@@ -5,8 +5,6 @@ import server.request.Request
 
 /**
  * Dictates how the server handles specific HTTP requests.
- *
- * Individual [Handler]s are installed using the [registerHandler] method.
  */
 class Router(routes: List<Route>) {
     private val routeMap = mutableMapOf<Pair<String, Method>, Handler>()
@@ -18,24 +16,14 @@ class Router(routes: List<Route>) {
     }
 
     /**
-     * Adds a [Handler] to the router.
-     *
-     * @param path the path the route handles.
-     * @param method the HTTP method the route handles.
-     * @param handler how to respond to the request.
-     */
-    fun registerHandler(path: String, method: Method, handler: Handler) {
-        routeMap[path to method] = handler
-    }
-
-    /**
-     * Routes an HTTP request to the correct [Handler].
+     * Routes an HTTP request to its assigned [Handler].
      *
      * @param request the HTTP request.
      * @return The headers and body of the HTTP response.
      */
     fun handleConnection(request: Request): Pair<List<String>, String> {
-        // TODO: Introduce error handlers for unrecognised routes
+        // TODO: Introduce error handlers for unrecognised paths
+        // TODO: Introduce error handlers for unrecognised methods
         val route = routeMap[request.path to request.method] ?: throw UnregisteredRouteException()
         return route.dispatch(request)
     }
