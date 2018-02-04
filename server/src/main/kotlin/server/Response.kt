@@ -1,6 +1,17 @@
 package server
 
-class Response(val statusLine: StatusLine, val headers: List<ResponseHeader>, val body: String)
+import server.ResponseHeader.*
+import server.StatusLine._200
+
+class Response(
+        val body: String,
+        val statusLine: StatusLine = _200,
+        val headers: List<ResponseHeader> = listOf(
+                ContentType("text/plain"),
+                ContentLength(body.length + 1),
+                Connection("close"))) {
+    override fun toString() = "$statusLine\n${headers.joinToString("\n")}\n\n$body\n"
+}
 
 sealed class StatusLine {
     object _200: StatusLine() {
@@ -15,13 +26,13 @@ sealed class StatusLine {
 }
 
 sealed class ResponseHeader {
-    class ContentType(private val value: String): ResponseHeader() {
+    data class ContentType(val value: String): ResponseHeader() {
         override fun toString() = "Content-Type: $value"
     }
-    class ContentLength(private val value: Int): ResponseHeader() {
+    data class ContentLength(val value: Int): ResponseHeader() {
         override fun toString() = "Content-Length: $value"
     }
-    class Connection(private val value: String): ResponseHeader() {
+    data class Connection(val value: String): ResponseHeader() {
         override fun toString() = "Connection: $value"
     }
 }

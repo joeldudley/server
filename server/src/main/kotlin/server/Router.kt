@@ -1,7 +1,6 @@
 package server
 
 import server.Method.UNKNOWN
-import server.ResponseHeader.*
 
 /**
  * Dictates how the server handles specific HTTP requests.
@@ -9,23 +8,11 @@ import server.ResponseHeader.*
 class Router(routes: List<Route>) {
     private val routeMap = mutableMapOf<String, MutableMap<Method, Handler>>()
 
-    private val _404HandlerBody = "Not found."
-    private val _404HandlerHeaders = listOf(
-            ContentType("text/plain"),
-            ContentLength(_404HandlerBody.length + 1),
-            Connection("close"))
-
-    private val _405HandlerBody = "Method not allowed."
-    private val _405HandlerHeaders = listOf(
-            ContentType("text/plain"),
-            ContentLength(_405HandlerBody.length + 1),
-            Connection("close"))
-
-    private val shutdownBody = "Server shut down."
-    private val shutdownHeaders = listOf(
-            ContentType("text/plain"),
-            ContentLength(shutdownBody.length + 1),
-            Connection("close"))
+    companion object {
+        val _404HandlerBody = "Not found."
+        val _405HandlerBody = "Method not allowed."
+        val shutdownBody = "Server shut down."
+    }
 
     init {
         routes.forEach { (path, method, handler) ->
@@ -45,10 +32,10 @@ class Router(routes: List<Route>) {
      * @return The headers and body of the HTTP response.
      */
     fun handleConnection(request: Request): Response {
-        if (request.path == "/shutdown") return Response(StatusLine._200, shutdownHeaders, shutdownBody)
-        if (request.method == UNKNOWN) return Response(StatusLine._405, _405HandlerHeaders, _405HandlerBody)
-        val methodToHandlerMap = routeMap[request.path] ?: return Response(StatusLine._404, _404HandlerHeaders, _404HandlerBody)
-        val handler = methodToHandlerMap[request.method] ?: return Response(StatusLine._405, _405HandlerHeaders, _405HandlerBody)
+        if (request.path == "/shutdown") return Response(shutdownBody)
+        if (request.method == UNKNOWN) return Response(_405HandlerBody, StatusLine._405)
+        val methodToHandlerMap = routeMap[request.path] ?: return Response(_404HandlerBody, StatusLine._404)
+        val handler = methodToHandlerMap[request.method] ?: return Response(_405HandlerBody, StatusLine._405)
         return handler.dispatch(request)
     }
 }

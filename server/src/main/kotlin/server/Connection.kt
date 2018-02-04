@@ -131,15 +131,7 @@ class Connection(connection: Socket) {
      * @return The HTTP response's headers and body.
      */
     internal fun writeResponse(response: Response) {
-        connectionWriter.write(response.statusLine.toString())
-        connectionWriter.newLine()
-        for (header in response.headers) {
-            connectionWriter.write(header.toString())
-            connectionWriter.newLine()
-        }
-        connectionWriter.newLine()
-        connectionWriter.write(response.body)
-        connectionWriter.newLine()
+        connectionWriter.write(response.toString())
         connectionWriter.flush()
     }
 }

@@ -9,6 +9,16 @@ class RouterTests {
     // This router configuration implicitly tests having multiple methods for the same path.
     private val router = Router(listOf(Route("/", GET, getRootHandler), Route("/", POST, postRootHandler)))
 
+
+    private fun assertStandardHeaders(body: String, headers: List<ResponseHeader>) {
+        val defaultHeaders = listOf(
+                ResponseHeader.ContentType("text/plain"),
+                ResponseHeader.ContentLength(body.length + 1),
+                ResponseHeader.Connection("close"))
+
+        assertEquals(defaultHeaders, headers)
+    }
+
     @Test
     fun `router dispatches correctly to known GET routes`() {
         val validRequest = "GET / HTTP/1.1\n\n"
@@ -19,7 +29,7 @@ class RouterTests {
         val response = router.handleConnection(request)
 
         assertEquals(StatusLine._200, response.statusLine)
-        assertEquals(expectedGetRootHandlerHeaders, response.headers)
+        assertStandardHeaders(response.body, response.headers)
         assertEquals(expectedGetRootHandlerBody, response.body)
     }
 
@@ -33,7 +43,7 @@ class RouterTests {
         val response = router.handleConnection(request)
 
         assertEquals(StatusLine._200, response.statusLine)
-        assertEquals(expectedPostRootHandlerHeaders, response.headers)
+        assertStandardHeaders(response.body, response.headers)
         assertEquals(expectedPostRootHandlerBody, response.body)
     }
 
@@ -47,8 +57,8 @@ class RouterTests {
         val response = router.handleConnection(request)
 
         assertEquals(StatusLine._404, response.statusLine)
-        assertEquals(_404HandlerHeaders, response.headers)
-        assertEquals(_404HandlerBody, response.body)
+        assertStandardHeaders(response.body, response.headers)
+        assertEquals(Router._404HandlerBody, response.body)
     }
 
     @Test
@@ -61,8 +71,8 @@ class RouterTests {
         val response = router.handleConnection(request)
 
         assertEquals(StatusLine._405, response.statusLine)
-        assertEquals(_405HandlerHeaders, response.headers)
-        assertEquals(_405HandlerBody, response.body)
+        assertStandardHeaders(response.body, response.headers)
+        assertEquals(Router._405HandlerBody, response.body)
     }
 
     @Test
@@ -75,7 +85,21 @@ class RouterTests {
         val response = router.handleConnection(request)
 
         assertEquals(StatusLine._405, response.statusLine)
-        assertEquals(_405HandlerHeaders, response.headers)
-        assertEquals(_405HandlerBody, response.body)
+        assertStandardHeaders(response.body, response.headers)
+        assertEquals(Router._405HandlerBody, response.body)
+    }
+
+    @Test
+    fun `router has a shutdown route`() {
+        val validRequest = "GET /shutdown HTTP/1.1\n\n"
+        val mockSocket = createMockSocket(validRequest)
+        val connection = Connection(mockSocket)
+        val request = connection.parseRequest()
+
+        val response = router.handleConnection(request)
+
+        assertEquals(StatusLine._200, response.statusLine)
+        assertStandardHeaders(response.body, response.headers)
+        assertEquals(Router.shutdownBody, response.body)
     }
 }
