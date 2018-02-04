@@ -22,6 +22,15 @@ abstract class Server(port: Int, routes: List<Route>, numberOfThreads: Int = 10)
 
     /** Starts the server running in a loop. */
     fun start() {
+        println("Starting the server on port ${serverSocket.localPort}...")
+
+        Runtime.getRuntime().addShutdownHook(object : Thread() {
+            override fun run() {
+                println("Shutting down the server...")
+                shutDown()
+            }
+        })
+
         while (true) {
             val socket = try {
                 serverSocket.accept()
