@@ -43,6 +43,7 @@ abstract class Server(port: Int, routes: List<Route>, numberOfThreads: Int = 10)
             threadPool.submit {
                 val connection = Connection(socket)
                 val request = connection.parseRequest()
+                if (request.path == "/shutdown") shutDown()
                 val response = router.handleConnection(request)
                 connection.writeResponse(response)
                 socket.close()

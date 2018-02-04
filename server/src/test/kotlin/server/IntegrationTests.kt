@@ -22,6 +22,7 @@ private val PORT = 4444
 // TODO: Check headers here?
 class IntegrationTests {
     private lateinit var server: Server
+    private val client = OkHttpClient()
 
     @Before
     fun setUp() {
@@ -39,7 +40,6 @@ class IntegrationTests {
 
     @Test
     fun `server responds to GET requests`() {
-        val client = OkHttpClient()
         val url = URL("http://localhost:$PORT\n")
         val request = Request.Builder().url(url).build()
         val response = client.newCall(request).execute()
@@ -49,7 +49,6 @@ class IntegrationTests {
 
     @Test
     fun `server responds to POST requests`() {
-        val client = OkHttpClient()
         val url = URL("http://localhost:$PORT\n")
         val mediaType = MediaType.parse("application/json")
         val body = RequestBody.create(mediaType, "one=two&three=four")
@@ -61,7 +60,6 @@ class IntegrationTests {
 
     @Test
     fun `server rejects connections on other ports`() {
-        val client = OkHttpClient()
         val url = URL("http://localhost:${PORT + 1}\n")
         val request = Request.Builder().url(url).build()
 
@@ -72,33 +70,46 @@ class IntegrationTests {
 
     @Test
     fun `server throws 404 exceptions for unregistered paths`() {
-        val client = OkHttpClient()
         val url = URL("http://localhost:$PORT/test\n")
         val request = Request.Builder().url(url).build()
         val response = client.newCall(request).execute()
         assert(!response.isSuccessful)
-        assertEquals("Not found\n", response.body()?.string())
+        assertEquals("Not found.\n", response.body()?.string())
     }
 
     @Test
     fun `server throws 405 exceptions for unallowed methods`() {
-        val client = OkHttpClient()
         val url = URL("http://localhost:$PORT\n")
         val mediaType = MediaType.parse("application/json")
         val body = RequestBody.create(mediaType, "one=two&three=four")
         val request = Request.Builder().url(url).put(body).build()
         val response = client.newCall(request).execute()
         assert(!response.isSuccessful)
-        assertEquals("Method not allowed\n", response.body()?.string())
+        assertEquals("Method not allowed.\n", response.body()?.string())
     }
 
     @Test
     fun `server throws 405 exceptions for unrecognised methods`() {
-        val client = OkHttpClient()
         val url = URL("http://localhost:$PORT\n")
         val request = Request.Builder().url(url).method("XYZ", null).build()
         val response = client.newCall(request).execute()
         assert(!response.isSuccessful)
-        assertEquals("Method not allowed\n", response.body()?.string())
+        assertEquals("Method not allowed.\n", response.body()?.string())
+    }
+
+    @Test
+    fun `server has a shutdown endpoint`() {
+        val shutdownUrl = URL("http://localhost:$PORT/shutdown\n")
+        val shutdownRequest = Request.Builder().url(shutdownUrl).get().build()
+        val shutdownResponse = client.newCall(shutdownRequest).execute()
+        assert(shutdownResponse.isSuccessful)
+        assertEquals("Server shut down.\n", shutdownResponse.body()?.string())
+
+        val failedUrl = URL("http://localhost:${PORT + 1}\n")
+        val failedRequest = Request.Builder().url(failedUrl).build()
+
+        assertFailsWith<ConnectException> {
+            client.newCall(failedRequest).execute()
+        }
     }
 }

@@ -9,6 +9,24 @@ import server.ResponseHeader.*
 class Router(routes: List<Route>) {
     private val routeMap = mutableMapOf<String, MutableMap<Method, Handler>>()
 
+    private val _404HandlerBody = "Not found."
+    private val _404HandlerHeaders = listOf(
+            ContentType("text/plain"),
+            ContentLength(_404HandlerBody.length + 1),
+            Connection("close"))
+
+    private val _405HandlerBody = "Method not allowed."
+    private val _405HandlerHeaders = listOf(
+            ContentType("text/plain"),
+            ContentLength(_405HandlerBody.length + 1),
+            Connection("close"))
+
+    private val shutdownBody = "Server shut down."
+    private val shutdownHeaders = listOf(
+            ContentType("text/plain"),
+            ContentLength(shutdownBody.length + 1),
+            Connection("close"))
+
     init {
         routes.forEach { (path, method, handler) ->
             val methodToHandlerMap = routeMap[path]
@@ -27,6 +45,7 @@ class Router(routes: List<Route>) {
      * @return The headers and body of the HTTP response.
      */
     fun handleConnection(request: Request): Response {
+        if (request.path == "/shutdown") return Response(StatusLine._200, shutdownHeaders, shutdownBody)
         if (request.method == UNKNOWN) return Response(StatusLine._405, _405HandlerHeaders, _405HandlerBody)
         val methodToHandlerMap = routeMap[request.path] ?: return Response(StatusLine._404, _404HandlerHeaders, _404HandlerBody)
         val handler = methodToHandlerMap[request.method] ?: return Response(StatusLine._405, _405HandlerHeaders, _405HandlerBody)
@@ -61,15 +80,3 @@ data class Route(
         val method: Method,
         val handler: Handler
 )
-
-val _404HandlerBody = "Not found"
-val _404HandlerHeaders = listOf(
-        ContentType("text/plain"),
-        ContentLength(_404HandlerBody.length + 1),
-        Connection("close"))
-
-val _405HandlerBody = "Method not allowed"
-val _405HandlerHeaders = listOf(
-        ContentType("text/plain"),
-        ContentLength(_405HandlerBody.length + 1),
-        Connection("close"))
