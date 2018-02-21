@@ -3,7 +3,7 @@ import java.sql.*
 open class Database(jdbcString: String) {
     protected val connect = DriverManager.getConnection(jdbcString)
 
-    fun disconnectFromDB() = connect.close()
+    fun disconnect() = connect.close()
 
     fun deleteAllFromTable(qualifiedTableName: String) {
         val statement = connect.prepareStatement("DELETE from $qualifiedTableName")
@@ -46,5 +46,5 @@ fun main(args: Array<String>) {
     db.deleteAllFromTable("test.test")
     listOf("joel", "lewis", "dudley").forEach { string -> db.insertIntoTestTable(string) }
     db.queryTestTable().forEach { string -> println(string) }
-    db.disconnectFromDB()
+    db.disconnect()
 }
