@@ -42,3 +42,12 @@ It doesn't do anything interesting yet. It's just a chance to get familiar with 
     * `sudo` is required to run the server on a port as low as 80
     * Need to spin server off into its own thread - but then how would I kill it?
 * Leave the machine using `exit`
+
+# DB stuff
+
+* Log in as root: `mysql -u root`
+* Create a user: `CREATE USER 'admin'@'localhost';`
+* Grant the user privileges: `GRANT ALL PRIVILEGES ON *.* TO 'admin'@'localhost';`
+* Create DB: `CREATE DATABASE test;`
+* Select DB: `USE test;`
+* Create table: `CREATE TABLE test(text VARCHAR(10));`
