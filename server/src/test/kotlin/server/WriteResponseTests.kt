@@ -14,7 +14,7 @@ class WriteResponseTests {
         val mockSocket = createMockSocket()
         val connection = Connection(mockSocket)
         connection.writeResponse(response)
-        
+
         assertEquals(response.toString(), mockSocket.getOutputStream().toString())
     }
 }

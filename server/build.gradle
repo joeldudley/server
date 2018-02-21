@@ -7,9 +7,10 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8"
     compile "org.jetbrains.kotlin:kotlin-reflect"
+    compile "mysql:mysql-connector-java:5.1.13"
+
     testCompile "org.jetbrains.kotlin:kotlin-test"
     testCompile "org.jetbrains.kotlin:kotlin-test-junit"
-
     testCompile "com.squareup.okhttp3:okhttp:3.9.1"
     testCompile "org.mockito:mockito-all:2.0.2-beta"
 }
