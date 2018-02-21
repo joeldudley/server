@@ -1,4 +1,5 @@
-import java.sql.*
+import java.sql.DriverManager
+import java.sql.ResultSet
 
 open class Database(jdbcString: String) {
     protected val connect = DriverManager.getConnection(jdbcString)
